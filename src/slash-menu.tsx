@@ -29,11 +29,16 @@ import FormatQuoteIcon from "@mui/icons-material/FormatQuote";
 import DataObjectIcon from "@mui/icons-material/DataObject";
 import HorizontalRuleIcon from "@mui/icons-material/HorizontalRule";
 import ImageOutlinedIcon from "@mui/icons-material/ImageOutlined";
+import TableChartIcon from "@mui/icons-material/TableChart";
+import YouTubeIcon from "@mui/icons-material/YouTube";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
+import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 
 export interface SlashItem {
   title: string;
   description: string;
   icon: React.ReactNode;
+  category?: string;
   command: (props: { editor: Editor; range: Range }) => void;
 }
 
@@ -41,6 +46,7 @@ const SLASH_ITEMS: SlashItem[] = [
   {
     title: "Text",
     description: "Plain paragraph text",
+    category: "Basic",
     icon: <TextFieldsIcon fontSize="small" />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setParagraph().run();
@@ -49,6 +55,7 @@ const SLASH_ITEMS: SlashItem[] = [
   {
     title: "Heading 1",
     description: "Large section heading",
+    category: "Basic",
     icon: <TitleIcon fontSize="small" />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setHeading({ level: 1 }).run();
@@ -57,6 +64,7 @@ const SLASH_ITEMS: SlashItem[] = [
   {
     title: "Heading 2",
     description: "Medium section heading",
+    category: "Basic",
     icon: <TitleIcon fontSize="small" sx={{ fontSize: 18 }} />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setHeading({ level: 2 }).run();
@@ -65,6 +73,7 @@ const SLASH_ITEMS: SlashItem[] = [
   {
     title: "Heading 3",
     description: "Small section heading",
+    category: "Basic",
     icon: <TitleIcon fontSize="small" sx={{ fontSize: 16 }} />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setHeading({ level: 3 }).run();
@@ -73,6 +82,7 @@ const SLASH_ITEMS: SlashItem[] = [
   {
     title: "Bullet List",
     description: "Unordered list with bullets",
+    category: "Lists",
     icon: <FormatListBulletedIcon fontSize="small" />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleBulletList().run();
@@ -81,6 +91,7 @@ const SLASH_ITEMS: SlashItem[] = [
   {
     title: "Numbered List",
     description: "Ordered numbered list",
+    category: "Lists",
     icon: <FormatListNumberedIcon fontSize="small" />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleOrderedList().run();
@@ -89,6 +100,7 @@ const SLASH_ITEMS: SlashItem[] = [
   {
     title: "Task List",
     description: "List with checkboxes",
+    category: "Lists",
     icon: <ChecklistIcon fontSize="small" />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleTaskList().run();
@@ -97,6 +109,7 @@ const SLASH_ITEMS: SlashItem[] = [
   {
     title: "Blockquote",
     description: "Indented quote block",
+    category: "Blocks",
     icon: <FormatQuoteIcon fontSize="small" />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setBlockquote().run();
@@ -105,14 +118,46 @@ const SLASH_ITEMS: SlashItem[] = [
   {
     title: "Code Block",
     description: "Syntax-highlighted code",
+    category: "Blocks",
     icon: <DataObjectIcon fontSize="small" />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setCodeBlock().run();
     },
   },
   {
+    title: "Callout",
+    description: "Info callout block",
+    category: "Blocks",
+    icon: <InfoOutlinedIcon fontSize="small" />,
+    command: ({ editor, range }) => {
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .setBlockquote()
+        .insertContent("ℹ️ ")
+        .run();
+    },
+  },
+  {
+    title: "Warning",
+    description: "Warning callout block",
+    category: "Blocks",
+    icon: <WarningAmberIcon fontSize="small" />,
+    command: ({ editor, range }) => {
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .setBlockquote()
+        .insertContent("⚠️ ")
+        .run();
+    },
+  },
+  {
     title: "Divider",
     description: "Horizontal separator line",
+    category: "Inserts",
     icon: <HorizontalRuleIcon fontSize="small" />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).setHorizontalRule().run();
@@ -121,6 +166,7 @@ const SLASH_ITEMS: SlashItem[] = [
   {
     title: "Image",
     description: "Embed an image from URL",
+    category: "Inserts",
     icon: <ImageOutlinedIcon fontSize="small" />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).run();
@@ -131,6 +177,33 @@ const SLASH_ITEMS: SlashItem[] = [
           .focus()
           .insertContent({ type: "image", attrs: { src: url } })
           .run();
+      }
+    },
+  },
+  {
+    title: "Table",
+    description: "Insert a table",
+    category: "Inserts",
+    icon: <TableChartIcon fontSize="small" />,
+    command: ({ editor, range }) => {
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertTable({ rows: 3, cols: 3, withHeaderRow: true })
+        .run();
+    },
+  },
+  {
+    title: "YouTube",
+    description: "Embed a YouTube video",
+    category: "Embeds",
+    icon: <YouTubeIcon fontSize="small" />,
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).run();
+      const url = window.prompt("YouTube video URL:");
+      if (url) {
+        editor.chain().focus().setYoutubeVideo({ src: url }).run();
       }
     },
   },
@@ -189,38 +262,72 @@ const SlashMenuComponent = forwardRef<
 
   if (items.length === 0) return null;
 
+  // Group items by category for display
+  const grouped: { category: string; items: { item: SlashItem; globalIndex: number }[] }[] = [];
+  let lastCat = "";
+  items.forEach((item, index) => {
+    const cat = item.category ?? "";
+    if (cat !== lastCat) {
+      grouped.push({ category: cat, items: [] });
+      lastCat = cat;
+    }
+    grouped[grouped.length - 1].items.push({ item, globalIndex: index });
+  });
+
   return (
     <Paper
       elevation={8}
       sx={{
-        width: 280,
-        maxHeight: 320,
+        width: 300,
+        maxHeight: 380,
         overflowY: "auto",
         py: 0.5,
         borderRadius: 2,
       }}
     >
       <List dense disablePadding ref={listRef}>
-        {items.map((item, index) => (
-          <ListItemButton
-            key={item.title}
-            selected={index === selectedIndex}
-            onClick={() => selectItem(index)}
-            sx={{ px: 1.5, py: 0.5, borderRadius: 1, mx: 0.5 }}
-          >
-            <ListItemIcon sx={{ minWidth: 32, color: "text.secondary" }}>
-              {item.icon}
-            </ListItemIcon>
-            <ListItemText
-              primary={item.title}
-              secondary={item.description}
-              primaryTypographyProps={{ variant: "body2", fontWeight: 500 }}
-              secondaryTypographyProps={{
-                variant: "caption",
-                color: "text.disabled",
-              }}
-            />
-          </ListItemButton>
+        {grouped.map((group) => (
+          <React.Fragment key={group.category || "_none"}>
+            {group.category && (
+              <Typography
+                variant="caption"
+                color="text.disabled"
+                sx={{
+                  display: "block",
+                  px: 1.5,
+                  pt: 1,
+                  pb: 0.25,
+                  fontWeight: 600,
+                  textTransform: "uppercase",
+                  letterSpacing: "0.05em",
+                  fontSize: "0.65rem",
+                }}
+              >
+                {group.category}
+              </Typography>
+            )}
+            {group.items.map(({ item, globalIndex }) => (
+              <ListItemButton
+                key={item.title}
+                selected={globalIndex === selectedIndex}
+                onClick={() => selectItem(globalIndex)}
+                sx={{ px: 1.5, py: 0.5, borderRadius: 1, mx: 0.5 }}
+              >
+                <ListItemIcon sx={{ minWidth: 32, color: "text.secondary" }}>
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.title}
+                  secondary={item.description}
+                  primaryTypographyProps={{ variant: "body2", fontWeight: 500 }}
+                  secondaryTypographyProps={{
+                    variant: "caption",
+                    color: "text.disabled",
+                  }}
+                />
+              </ListItemButton>
+            ))}
+          </React.Fragment>
         ))}
       </List>
       <Typography

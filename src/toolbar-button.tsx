@@ -12,9 +12,13 @@ export type ToolbarAction =
   | "h1" | "h2" | "h3"
   | "bulletList" | "orderedList" | "taskList"
   | "blockquote" | "horizontalRule" | "codeBlock"
-  | "alignLeft" | "alignCenter" | "alignRight"
+  | "alignLeft" | "alignCenter" | "alignRight" | "alignJustify"
   | "undo" | "redo"
   | "link" | "image"
+  | "superscript" | "subscript"
+  | "clearFormatting"
+  | "insertTable" | "addColumnAfter" | "addColumnBefore" | "deleteColumn"
+  | "addRowAfter" | "addRowBefore" | "deleteRow" | "deleteTable" | "mergeCells" | "splitCell"
   | "custom";
 
 export function dispatchAction(editor: Editor, action: ToolbarAction) {
@@ -38,8 +42,22 @@ export function dispatchAction(editor: Editor, action: ToolbarAction) {
     case "alignLeft": c.setTextAlign("left").run(); break;
     case "alignCenter": c.setTextAlign("center").run(); break;
     case "alignRight": c.setTextAlign("right").run(); break;
+    case "alignJustify": c.setTextAlign("justify").run(); break;
     case "undo": c.undo().run(); break;
     case "redo": c.redo().run(); break;
+    case "superscript": c.toggleSuperscript().run(); break;
+    case "subscript": c.toggleSubscript().run(); break;
+    case "clearFormatting": c.unsetAllMarks().run(); break;
+    case "insertTable": editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(); break;
+    case "addColumnAfter": c.addColumnAfter().run(); break;
+    case "addColumnBefore": c.addColumnBefore().run(); break;
+    case "deleteColumn": c.deleteColumn().run(); break;
+    case "addRowAfter": c.addRowAfter().run(); break;
+    case "addRowBefore": c.addRowBefore().run(); break;
+    case "deleteRow": c.deleteRow().run(); break;
+    case "deleteTable": c.deleteTable().run(); break;
+    case "mergeCells": c.mergeCells().run(); break;
+    case "splitCell": c.splitCell().run(); break;
     default: break;
   }
 }
@@ -63,7 +81,10 @@ export function isActive(editor: Editor, action: ToolbarAction): boolean {
     case "alignLeft": return editor.isActive({ textAlign: "left" });
     case "alignCenter": return editor.isActive({ textAlign: "center" });
     case "alignRight": return editor.isActive({ textAlign: "right" });
+    case "alignJustify": return editor.isActive({ textAlign: "justify" });
     case "link": return editor.isActive("link");
+    case "superscript": return editor.isActive("superscript");
+    case "subscript": return editor.isActive("subscript");
     default: return false;
   }
 }

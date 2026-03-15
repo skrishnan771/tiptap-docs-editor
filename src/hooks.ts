@@ -170,11 +170,82 @@ export function useEditorStyles(theme: Theme) {
         border-radius: ${br}px;
         margin: 0.6em 0;
         display: block;
+        cursor: pointer;
+        transition: outline 0.15s ease;
       }
       .tiptap img.ProseMirror-selectednode {
         outline: 2px solid ${theme.palette.secondary.main};
         outline-offset: 2px;
       }
+
+      /* ---------- Tables ---------- */
+      .tiptap table {
+        border-collapse: collapse;
+        width: 100%;
+        margin: 1em 0;
+        table-layout: auto;
+        overflow: hidden;
+      }
+      .tiptap th,
+      .tiptap td {
+        border: 1px solid ${theme.palette.divider};
+        padding: 0.5em 0.75em;
+        min-width: 80px;
+        vertical-align: top;
+        position: relative;
+      }
+      .tiptap th {
+        background: ${alpha(theme.palette.text.primary, 0.04)};
+        font-weight: 600;
+        text-align: left;
+      }
+      .tiptap .selectedCell::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: ${alpha(theme.palette.secondary.main, 0.12)};
+        pointer-events: none;
+        z-index: 1;
+      }
+      .tiptap .column-resize-handle {
+        position: absolute;
+        right: -2px;
+        top: 0;
+        bottom: -2px;
+        width: 4px;
+        background-color: ${theme.palette.secondary.main};
+        pointer-events: none;
+      }
+      .tiptap.resize-cursor {
+        cursor: col-resize;
+      }
+      .tableWrapper {
+        overflow-x: auto;
+        margin: 1em 0;
+      }
+
+      /* ---------- YouTube embed ---------- */
+      .tiptap div[data-youtube-video] {
+        position: relative;
+        padding-bottom: 56.25%;
+        height: 0;
+        overflow: hidden;
+        margin: 1em 0;
+        border-radius: ${br}px;
+      }
+      .tiptap div[data-youtube-video] iframe {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+        border-radius: ${br}px;
+      }
+
+      /* ---------- Superscript / Subscript ---------- */
+      .tiptap sup { font-size: 0.75em; vertical-align: super; }
+      .tiptap sub { font-size: 0.75em; vertical-align: sub; }
 
       .ProseMirror-selectednode {
         position: relative;
@@ -199,6 +270,12 @@ export function useEditorStyles(theme: Theme) {
         border-color: ${theme.palette.secondary.main} !important;
         border-width: 2px !important;
         opacity: 1 !important;
+      }
+
+      /* ---------- Print styles ---------- */
+      @media print {
+        .tiptap-toolbar, .tiptap-bubble-menu { display: none !important; }
+        .tiptap.ProseMirror { padding: 0; min-height: auto; }
       }
     `;
 

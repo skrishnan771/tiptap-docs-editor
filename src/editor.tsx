@@ -13,8 +13,21 @@ import { TextStyle, Color } from "@tiptap/extension-text-style";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { common, createLowlight } from "lowlight";
 import DragHandle from "@tiptap/extension-drag-handle-react";
+import { Table } from "@tiptap/extension-table";
+import { TableRow } from "@tiptap/extension-table-row";
+import { TableHeader } from "@tiptap/extension-table-header";
+import { TableCell } from "@tiptap/extension-table-cell";
+import { Superscript } from "@tiptap/extension-superscript";
+import { Subscript } from "@tiptap/extension-subscript";
+import { Underline } from "@tiptap/extension-underline";
+import { Link } from "@tiptap/extension-link";
+import { FontFamily } from "@tiptap/extension-font-family";
+import { Youtube } from "@tiptap/extension-youtube";
+import { CharacterCount } from "@tiptap/extension-character-count";
+import { Typography } from "@tiptap/extension-typography";
 
 import Box from "@mui/material/Box";
+import MuiTypography from "@mui/material/Typography";
 import { alpha } from "@mui/material/styles";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 
@@ -22,6 +35,7 @@ import type { DocsEditorProps } from "./types";
 import { useEditorStyles } from "./hooks";
 import { TopToolbar } from "./top-toolbar";
 import { BubbleToolbar } from "./bubble-toolbar";
+import { ImageBubbleMenu } from "./image-bubble-menu";
 import { SlashCommands } from "./slash-menu";
 
 const lowlight = createLowlight(common);
@@ -42,6 +56,10 @@ const DocsEditor: React.FC<DocsEditorProps> = ({
   theme,
   onChange,
   onReady,
+  editable = true,
+  toolbar,
+  slashMenuItems,
+  showCharacterCount = false,
 }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -65,9 +83,30 @@ const DocsEditor: React.FC<DocsEditorProps> = ({
       CodeBlockLowlight.configure({ lowlight }),
       TextStyle,
       Color,
-      SlashCommands,
+      Underline,
+      Superscript,
+      Subscript,
+      FontFamily,
+      Typography,
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" },
+      }),
+      Table.configure({ resizable: true }),
+      TableRow,
+      TableHeader,
+      TableCell,
+      Youtube.configure({ inline: false, ccLanguage: "en" }),
+      CharacterCount,
+      SlashCommands.configure({
+        suggestion: {
+          ...(SlashCommands.options?.suggestion ?? {}),
+          ...(slashMenuItems ? { customItems: slashMenuItems } : {}),
+        },
+      }),
     ],
     content,
+    editable,
     onUpdate({ editor: e }) {
       onChange(e.getHTML());
     },
@@ -105,41 +144,52 @@ const DocsEditor: React.FC<DocsEditorProps> = ({
         style={{ display: "none" }}
       />
 
-      <TopToolbar editor={editor} theme={theme} fileInputRef={fileInputRef} />
+      {editable && (
+        <TopToolbar
+          editor={editor}
+          theme={theme}
+          fileInputRef={fileInputRef}
+          toolbarConfig={toolbar}
+        />
+      )}
 
       <BubbleToolbar editor={editor} theme={theme} />
 
-      <DragHandle
-        editor={editor}
-        nested={{ edgeDetection: { threshold: -16 } }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            width: 22,
-            height: 26,
-            cursor: "grab",
-            borderRadius: `${Number(theme.shape.borderRadius) / 2}px`,
-            color: theme.palette.text.disabled,
-            opacity: 0.5,
-            transition: "all 0.2s ease",
-            "&:hover": {
-              opacity: 1,
-              color: theme.palette.text.secondary,
-              bgcolor: alpha(theme.palette.text.primary, 0.08),
-              transform: "scale(1.1)",
-            },
-            "&:active": {
-              cursor: "grabbing",
-              transform: "scale(0.95)",
-            },
-          }}
+      <ImageBubbleMenu editor={editor} theme={theme} />
+
+      {editable && (
+        <DragHandle
+          editor={editor}
+          nested={{ edgeDetection: { threshold: -16 } }}
         >
-          <DragIndicatorIcon sx={{ fontSize: 16 }} />
-        </Box>
-      </DragHandle>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              width: 22,
+              height: 26,
+              cursor: "grab",
+              borderRadius: `${Number(theme.shape.borderRadius) / 2}px`,
+              color: theme.palette.text.disabled,
+              opacity: 0.5,
+              transition: "all 0.2s ease",
+              "&:hover": {
+                opacity: 1,
+                color: theme.palette.text.secondary,
+                bgcolor: alpha(theme.palette.text.primary, 0.08),
+                transform: "scale(1.1)",
+              },
+              "&:active": {
+                cursor: "grabbing",
+                transform: "scale(0.95)",
+              },
+            }}
+          >
+            <DragIndicatorIcon sx={{ fontSize: 16 }} />
+          </Box>
+        </DragHandle>
+      )}
 
       <Box
         sx={{
@@ -151,6 +201,28 @@ const DocsEditor: React.FC<DocsEditorProps> = ({
       >
         <EditorContent editor={editor} />
       </Box>
+
+      {showCharacterCount && editor && (
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 2,
+            px: 2,
+            py: 0.75,
+            borderTop: `1px solid ${theme.palette.divider}`,
+            bgcolor: theme.palette.background.paper,
+            flexShrink: 0,
+          }}
+        >
+          <MuiTypography variant="caption" color="text.secondary">
+            {editor.storage.characterCount.characters()} characters
+          </MuiTypography>
+          <MuiTypography variant="caption" color="text.secondary">
+            {editor.storage.characterCount.words()} words
+          </MuiTypography>
+        </Box>
+      )}
     </Box>
   );
 };

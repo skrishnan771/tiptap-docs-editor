@@ -13,10 +13,11 @@ import FormatUnderlinedIcon from "@mui/icons-material/FormatUnderlined";
 import StrikethroughSIcon from "@mui/icons-material/StrikethroughS";
 import CodeIcon from "@mui/icons-material/Code";
 import HighlightIcon from "@mui/icons-material/Highlight";
-import LinkIcon from "@mui/icons-material/Link";
+import SuperscriptIcon from "@mui/icons-material/Superscript";
+import SubscriptIcon from "@mui/icons-material/Subscript";
 
 import { TBtn } from "./toolbar-button";
-import { promptForLink } from "./utils";
+import { LinkPopoverButton } from "./link-popover";
 
 export const BubbleToolbar: React.FC<{ editor: Editor; theme: Theme }> = ({
   editor,
@@ -65,18 +66,16 @@ export const BubbleToolbar: React.FC<{ editor: Editor; theme: Theme }> = ({
         <TBtn label="Highlight" action="highlight" editor={editor} theme={theme}>
           <HighlightIcon sx={{ fontSize: 16 }} />
         </TBtn>
+        <TBtn label="Superscript" action="superscript" editor={editor} theme={theme}>
+          <SuperscriptIcon sx={{ fontSize: 16 }} />
+        </TBtn>
+        <TBtn label="Subscript" action="subscript" editor={editor} theme={theme}>
+          <SubscriptIcon sx={{ fontSize: 16 }} />
+        </TBtn>
 
         <Divider orientation="vertical" flexItem sx={{ mx: 0.25, my: 0.5 }} />
 
-        <TBtn
-          label="Link"
-          action="link"
-          editor={editor}
-          theme={theme}
-          onCustomAction={() => promptForLink(editor)}
-        >
-          <LinkIcon sx={{ fontSize: 16 }} />
-        </TBtn>
+        <LinkPopoverButton editor={editor} theme={theme} iconSize={16} />
       </Paper>
     </BubbleMenu>
   );
