@@ -165,19 +165,26 @@ const SLASH_ITEMS: SlashItem[] = [
   },
   {
     title: "Image",
-    description: "Embed an image from URL",
+    description: "Upload an image from your device",
     category: "Inserts",
     icon: <ImageOutlinedIcon fontSize="small" />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).run();
-      const url = window.prompt("Image URL:");
-      if (url) {
-        editor
-          .chain()
-          .focus()
-          .insertContent({ type: "image", attrs: { src: url } })
-          .run();
-      }
+      const input = document.createElement("input");
+      input.type = "file";
+      input.accept = "image/*";
+      input.onchange = () => {
+        const file = input.files?.[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          if (typeof reader.result === "string") {
+            editor.chain().focus().setImage({ src: reader.result }).run();
+          }
+        };
+        reader.readAsDataURL(file);
+      };
+      input.click();
     },
   },
   {

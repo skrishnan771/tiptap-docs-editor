@@ -9,6 +9,7 @@ import TaskItem from "@tiptap/extension-task-item";
 import Highlight from "@tiptap/extension-highlight";
 import TextAlign from "@tiptap/extension-text-align";
 import Image from "@tiptap/extension-image";
+import { mergeAttributes } from "@tiptap/core";
 import { TextStyleKit } from "@tiptap/extension-text-style";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { common, createLowlight } from "lowlight";
@@ -38,6 +39,25 @@ import { ImageBubbleMenu } from "./image-bubble-menu";
 import { SlashCommands } from "./slash-menu";
 
 const lowlight = createLowlight(common);
+
+const CustomImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      style: {
+        default: null,
+        parseHTML: (el) => el.getAttribute("style"),
+        renderHTML: (attrs) => {
+          if (!attrs.style) return {};
+          return { style: attrs.style };
+        },
+      },
+    };
+  },
+  renderHTML({ HTMLAttributes }) {
+    return ["img", mergeAttributes(this.options.HTMLAttributes, HTMLAttributes)];
+  },
+});
 
 function handleImageFile(editor: Editor, file: File) {
   const reader = new FileReader();
@@ -78,7 +98,7 @@ const DocsEditor: React.FC<DocsEditorProps> = ({
       TaskItem.configure({ nested: true }),
       Highlight.configure({ multicolor: true }),
       TextAlign.configure({ types: ["heading", "paragraph"] }),
-      Image.configure({ allowBase64: true, inline: false }),
+      CustomImage.configure({ allowBase64: true, inline: false }),
       CodeBlockLowlight.configure({ lowlight }),
       TextStyleKit,
       Underline,
