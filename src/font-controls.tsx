@@ -65,7 +65,7 @@ export const FontSizeSelect: React.FC<FontControlsProps> = ({ editor }) => {
         value={String(sizeNum)}
         onChange={(e) => {
           const size = e.target.value;
-          editor.chain().focus().setMark("textStyle", { fontSize: `${size}px` }).run();
+          editor.chain().focus().setFontSize(`${size}px`).run();
         }}
         sx={{
           fontSize: "0.75rem",

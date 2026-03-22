@@ -95,7 +95,7 @@ export const TBtn: React.FC<{
   editor: Editor;
   theme: Theme;
   disabled?: boolean;
-  onCustomAction?: () => void;
+  onCustomAction?: (e?: React.MouseEvent<HTMLButtonElement>) => void;
   children: React.ReactNode;
 }> = ({ label, action, editor, theme, disabled = false, onCustomAction, children }) => {
   const accent = theme.palette.secondary.main;
@@ -112,7 +112,7 @@ export const TBtn: React.FC<{
             e.preventDefault();
             const act = e.currentTarget.dataset.action as ToolbarAction;
             if (onCustomAction && (act === "custom" || act === "link" || act === "image")) {
-              onCustomAction();
+              onCustomAction(e);
             } else {
               dispatchAction(editor, act);
             }

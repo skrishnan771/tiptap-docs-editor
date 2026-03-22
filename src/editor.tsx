@@ -9,7 +9,7 @@ import TaskItem from "@tiptap/extension-task-item";
 import Highlight from "@tiptap/extension-highlight";
 import TextAlign from "@tiptap/extension-text-align";
 import Image from "@tiptap/extension-image";
-import { TextStyle, Color } from "@tiptap/extension-text-style";
+import { TextStyleKit } from "@tiptap/extension-text-style";
 import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
 import { common, createLowlight } from "lowlight";
 import DragHandle from "@tiptap/extension-drag-handle-react";
@@ -21,7 +21,6 @@ import { Superscript } from "@tiptap/extension-superscript";
 import { Subscript } from "@tiptap/extension-subscript";
 import { Underline } from "@tiptap/extension-underline";
 import { Link } from "@tiptap/extension-link";
-import { FontFamily } from "@tiptap/extension-font-family";
 import { Youtube } from "@tiptap/extension-youtube";
 import { CharacterCount } from "@tiptap/extension-character-count";
 import { Typography } from "@tiptap/extension-typography";
@@ -81,12 +80,10 @@ const DocsEditor: React.FC<DocsEditorProps> = ({
       TextAlign.configure({ types: ["heading", "paragraph"] }),
       Image.configure({ allowBase64: true, inline: false }),
       CodeBlockLowlight.configure({ lowlight }),
-      TextStyle,
-      Color,
+      TextStyleKit,
       Underline,
       Superscript,
       Subscript,
-      FontFamily,
       Typography,
       Link.configure({
         openOnClick: false,
