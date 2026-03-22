@@ -79,6 +79,7 @@ const DocsEditor: React.FC<DocsEditorProps> = ({
   toolbar,
   slashMenuItems,
   showCharacterCount = false,
+  spellCheck = true,
 }) => {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
@@ -124,6 +125,13 @@ const DocsEditor: React.FC<DocsEditorProps> = ({
     ],
     content,
     editable,
+    editorProps: {
+      attributes: {
+        spellcheck: spellCheck ? "true" : "false",
+        autocorrect: spellCheck ? "on" : "off",
+        autocapitalize: spellCheck ? "on" : "off",
+      },
+    },
     onUpdate({ editor: e }) {
       onChange(e.getHTML());
     },

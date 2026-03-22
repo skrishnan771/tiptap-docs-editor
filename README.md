@@ -12,7 +12,7 @@ A drop-in, Notion-style rich text editor component for React — built on [Tipta
 - **Drag handle** — drag & drop blocks to reorder content
 - **Syntax-highlighted code blocks** — powered by [lowlight](https://github.com/wooorm/lowlight) with common language support
 - **Task lists** — interactive checklists with nesting support
-- **Image support** — upload via file picker or paste a URL through the slash menu
+- **Image support** — upload via file picker from the toolbar or slash menu
 - **YouTube embeds** — embed videos via slash command or programmatically
 - **Typography** — smart quotes, dashes, and other typographic enhancements
 - **Character & word count** — optional footer bar showing live character and word counts
@@ -20,6 +20,7 @@ A drop-in, Notion-style rich text editor component for React — built on [Tipta
 - **Customizable toolbar** — show/hide toolbar sections via `ToolbarConfig`
 - **Custom slash items** — inject your own slash menu entries with `slashMenuItems`
 - **Theme-aware** — fully styled from your MUI theme (light & dark mode)
+- **Spellcheck control** — browser spellcheck is off by default; enable it with `spellCheck={true}`
 - **SSR-compatible** — all components are marked `"use client"`
 
 ## Installation
@@ -70,17 +71,18 @@ function App() {
 
 ### `<DocsEditor />`
 
-| Prop                 | Type                       | Required | Default            | Description                                                      |
-| -------------------- | -------------------------- | -------- | ------------------ | ---------------------------------------------------------------- |
-| `content`            | `string`                   | Yes      | —                  | Initial HTML content for the editor                              |
-| `theme`              | `Theme`                    | Yes      | —                  | MUI theme object (from `createTheme()`)                          |
-| `onChange`           | `(html: string) => void`   | Yes      | —                  | Called with the updated HTML on every edit                       |
-| `placeholder`        | `string`                   | No       | `"Start writing…"` | Placeholder text shown when the editor is empty                  |
-| `onReady`            | `(editor: Editor) => void` | No       | —                  | Called once with the Tiptap `Editor` instance after creation     |
-| `editable`           | `boolean`                  | No       | `true`             | Whether the editor is editable or read-only                      |
-| `toolbar`            | `ToolbarConfig`            | No       | all enabled        | Toggle visibility of toolbar sections                            |
-| `slashMenuItems`     | `CustomSlashItem[]`        | No       | —                  | Additional custom entries for the slash command menu              |
-| `showCharacterCount` | `boolean`                  | No       | `false`            | Show a character & word count footer bar                         |
+| Prop                 | Type                       | Required | Default            | Description                                                  |
+| -------------------- | -------------------------- | -------- | ------------------ | ------------------------------------------------------------ |
+| `content`            | `string`                   | Yes      | —                  | Initial HTML content for the editor                          |
+| `theme`              | `Theme`                    | Yes      | —                  | MUI theme object (from `createTheme()`)                      |
+| `onChange`           | `(html: string) => void`   | Yes      | —                  | Called with the updated HTML on every edit                   |
+| `placeholder`        | `string`                   | No       | `"Start writing…"` | Placeholder text shown when the editor is empty              |
+| `onReady`            | `(editor: Editor) => void` | No       | —                  | Called once with the Tiptap `Editor` instance after creation |
+| `editable`           | `boolean`                  | No       | `true`             | Whether the editor is editable or read-only                  |
+| `toolbar`            | `ToolbarConfig`            | No       | all enabled        | Toggle visibility of toolbar sections                        |
+| `slashMenuItems`     | `CustomSlashItem[]`        | No       | —                  | Additional custom entries for the slash command menu         |
+| `showCharacterCount` | `boolean`                  | No       | `false`            | Show a character & word count footer bar                     |
+| `spellCheck`         | `boolean`                  | No       | `false`            | Enable browser spellcheck (red underlines for typos)         |
 
 ### Exports
 
@@ -94,13 +96,13 @@ import type {
 } from "tiptap-docs-editor";
 ```
 
-| Export            | Kind      | Description                                  |
-| ----------------- | --------- | -------------------------------------------- |
-| `DocsEditor`      | Component | The main editor component                    |
-| `DocsEditorProps` | Type      | Props interface for `DocsEditor`             |
-| `ToolbarConfig`   | Type      | Configuration to show/hide toolbar sections  |
-| `CustomSlashItem` | Type      | Shape of a custom slash menu item            |
-| `ToolbarAction`   | Type      | Union of all built-in toolbar action names   |
+| Export            | Kind      | Description                                 |
+| ----------------- | --------- | ------------------------------------------- |
+| `DocsEditor`      | Component | The main editor component                   |
+| `DocsEditorProps` | Type      | Props interface for `DocsEditor`            |
+| `ToolbarConfig`   | Type      | Configuration to show/hide toolbar sections |
+| `CustomSlashItem` | Type      | Shape of a custom slash menu item           |
+| `ToolbarAction`   | Type      | Union of all built-in toolbar action names  |
 
 ### `ToolbarConfig`
 
@@ -112,18 +114,18 @@ Control which toolbar sections are visible. All default to `true`.
   theme={theme}
   onChange={setContent}
   toolbar={{
-    history: true,        // Undo / Redo
-    fontControls: true,   // Font family & size dropdowns
-    formatting: true,     // Bold, italic, underline, strike, code, superscript, subscript
-    colorControls: true,  // Text color & highlight color pickers
-    headings: true,       // H1, H2, H3
-    lists: true,          // Bullet, numbered, task lists
-    inserts: true,        // Blockquote, horizontal rule, code block, image, link
-    table: true,          // Table grid picker & operations
-    alignment: true,      // Left, center, right, justify
+    history: true, // Undo / Redo
+    fontControls: true, // Font family & size dropdowns
+    formatting: true, // Bold, italic, underline, strike, code, superscript, subscript
+    colorControls: true, // Text color & highlight color pickers
+    headings: true, // H1, H2, H3
+    lists: true, // Bullet, numbered, task lists
+    inserts: true, // Blockquote, horizontal rule, code block, image, link
+    table: true, // Table grid picker & operations
+    alignment: true, // Left, center, right, justify
     superSubScript: true, // Superscript & subscript (within formatting section)
     clearFormatting: true, // Clear all marks
-    print: true,          // Print button
+    print: true, // Print button
   }}
 />
 ```
@@ -142,7 +144,12 @@ const myItems: CustomSlashItem[] = [
     category: "Custom",
     icon: <MyIcon />,
     command: ({ editor, range }) => {
-      editor.chain().focus().deleteRange(range).insertContent("<p>Custom!</p>").run();
+      editor
+        .chain()
+        .focus()
+        .deleteRange(range)
+        .insertContent("<p>Custom!</p>")
+        .run();
     },
   },
 ];
@@ -152,24 +159,24 @@ const myItems: CustomSlashItem[] = [
   theme={theme}
   onChange={setContent}
   slashMenuItems={myItems}
-/>
+/>;
 ```
 
 ### `ToolbarAction`
 
 All available actions that the toolbars support:
 
-| Category        | Actions                                                                                        |
-| --------------- | ---------------------------------------------------------------------------------------------- |
-| Text formatting | `bold`, `italic`, `underline`, `strike`, `code`, `highlight`, `superscript`, `subscript`       |
-| Headings        | `h1`, `h2`, `h3`                                                                               |
-| Lists           | `bulletList`, `orderedList`, `taskList`                                                        |
-| Blocks          | `blockquote`, `horizontalRule`, `codeBlock`                                                    |
-| Alignment       | `alignLeft`, `alignCenter`, `alignRight`, `alignJustify`                                       |
-| History         | `undo`, `redo`                                                                                 |
-| Insert          | `link`, `image`                                                                                |
+| Category        | Actions                                                                                                                                                  |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Text formatting | `bold`, `italic`, `underline`, `strike`, `code`, `highlight`, `superscript`, `subscript`                                                                 |
+| Headings        | `h1`, `h2`, `h3`                                                                                                                                         |
+| Lists           | `bulletList`, `orderedList`, `taskList`                                                                                                                  |
+| Blocks          | `blockquote`, `horizontalRule`, `codeBlock`                                                                                                              |
+| Alignment       | `alignLeft`, `alignCenter`, `alignRight`, `alignJustify`                                                                                                 |
+| History         | `undo`, `redo`                                                                                                                                           |
+| Insert          | `link`, `image`                                                                                                                                          |
 | Table           | `insertTable`, `addColumnAfter`, `addColumnBefore`, `deleteColumn`, `addRowAfter`, `addRowBefore`, `deleteRow`, `deleteTable`, `mergeCells`, `splitCell` |
-| Other           | `clearFormatting`, `custom`                                                                    |
+| Other           | `clearFormatting`, `custom`                                                                                                                              |
 
 ## Slash Commands
 
@@ -187,7 +194,7 @@ Type `/` at the beginning of a new line or after a space to open the command men
 | Blocks   | Callout       | Info callout block        |
 | Blocks   | Warning       | Warning callout block     |
 | Inserts  | Divider       | Horizontal separator      |
-| Inserts  | Image         | Insert image from URL     |
+| Inserts  | Image         | Upload image from device  |
 | Inserts  | Table         | Insert a 3×3 table        |
 | Embeds   | YouTube       | Embed a YouTube video     |
 

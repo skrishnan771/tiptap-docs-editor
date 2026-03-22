@@ -35,4 +35,5 @@ export interface DocsEditorProps {
   toolbar?: ToolbarConfig;
   slashMenuItems?: CustomSlashItem[];
   showCharacterCount?: boolean;
+  spellCheck?: boolean;
 }

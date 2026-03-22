@@ -26,6 +26,7 @@ export const BubbleToolbar: React.FC<{ editor: Editor; theme: Theme }> = ({
   return (
     <BubbleMenu
       editor={editor}
+      style={{ zIndex: 10 }}
       options={{ placement: "top", offset: { mainAxis: 8 } }}
       shouldShow={({ editor: e, state }) => {
         const { from, to } = state.selection;

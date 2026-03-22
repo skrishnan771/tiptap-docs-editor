@@ -69,6 +69,7 @@ export const ImageBubbleMenu: React.FC<ImageBubbleMenuProps> = ({ editor, theme 
   return (
     <BubbleMenu
       editor={editor}
+      style={{ zIndex: 10 }}
       options={{ placement: "top", offset: { mainAxis: 8 } }}
       shouldShow={({ editor: e }) => e.isActive("image")}
     >
