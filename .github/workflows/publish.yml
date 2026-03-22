@@ -15,8 +15,15 @@ jobs:
       - uses: actions/checkout@v5
       - uses: actions/setup-node@v4
         with:
-          node-version: 22
+          node-version: 24
           registry-url: "https://registry.npmjs.org"
-      - run: npm ci
-      - run: npm run build
-      - run: npm publish --provenance --access public
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build project
+        run: npm run build --if-present
+
+      - name: Publish to npm
+        # No --provenance flag is needed; OIDC generates it automatically
+        run: npm publish --access public
