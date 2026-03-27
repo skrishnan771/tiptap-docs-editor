@@ -16,6 +16,12 @@ export default defineConfig({
 
   target: "es2020",
 
+  banner: { js: '"use client";' },
+
+  esbuildOptions(options) {
+    options.jsx = "automatic";
+  },
+
   external: [
     // React ecosystem
     "react",
