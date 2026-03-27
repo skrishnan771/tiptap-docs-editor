@@ -1,30 +1,8 @@
 "use client";
 
-import React, { useCallback, useRef } from "react";
+import React, { useCallback, useMemo, useRef } from "react";
 import { useEditor, EditorContent, type Editor } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
-import Placeholder from "@tiptap/extension-placeholder";
-import TaskList from "@tiptap/extension-task-list";
-import TaskItem from "@tiptap/extension-task-item";
-import Highlight from "@tiptap/extension-highlight";
-import TextAlign from "@tiptap/extension-text-align";
-import Image from "@tiptap/extension-image";
-import { mergeAttributes } from "@tiptap/core";
-import { TextStyleKit } from "@tiptap/extension-text-style";
-import CodeBlockLowlight from "@tiptap/extension-code-block-lowlight";
-import { common, createLowlight } from "lowlight";
 import DragHandle from "@tiptap/extension-drag-handle-react";
-import { Table } from "@tiptap/extension-table";
-import { TableRow } from "@tiptap/extension-table-row";
-import { TableHeader } from "@tiptap/extension-table-header";
-import { TableCell } from "@tiptap/extension-table-cell";
-import { Superscript } from "@tiptap/extension-superscript";
-import { Subscript } from "@tiptap/extension-subscript";
-import { Underline } from "@tiptap/extension-underline";
-import { Link } from "@tiptap/extension-link";
-import { Youtube } from "@tiptap/extension-youtube";
-import { CharacterCount } from "@tiptap/extension-character-count";
-import { Typography } from "@tiptap/extension-typography";
 
 import Box from "@mui/material/Box";
 import MuiTypography from "@mui/material/Typography";
@@ -36,28 +14,7 @@ import { useEditorStyles } from "./hooks";
 import { TopToolbar } from "./top-toolbar";
 import { BubbleToolbar } from "./bubble-toolbar";
 import { ImageBubbleMenu } from "./image-bubble-menu";
-import { SlashCommands } from "./slash-menu";
-
-const lowlight = createLowlight(common);
-
-const CustomImage = Image.extend({
-  addAttributes() {
-    return {
-      ...this.parent?.(),
-      style: {
-        default: null,
-        parseHTML: (el) => el.getAttribute("style"),
-        renderHTML: (attrs) => {
-          if (!attrs.style) return {};
-          return { style: attrs.style };
-        },
-      },
-    };
-  },
-  renderHTML({ HTMLAttributes }) {
-    return ["img", mergeAttributes(this.options.HTMLAttributes, HTMLAttributes)];
-  },
-});
+import { getDefaultExtensions } from "./extensions";
 
 function handleImageFile(editor: Editor, file: File) {
   const reader = new FileReader();
@@ -70,6 +27,7 @@ function handleImageFile(editor: Editor, file: File) {
 }
 
 const DocsEditor: React.FC<DocsEditorProps> = ({
+  extensions: extensionsProp,
   content,
   placeholder = "Start writing…",
   theme,
@@ -85,44 +43,15 @@ const DocsEditor: React.FC<DocsEditorProps> = ({
 
   useEditorStyles(theme);
 
+  const resolvedExtensions = useMemo(
+    () =>
+      extensionsProp ??
+      getDefaultExtensions({ theme, placeholder, slashMenuItems }),
+    [extensionsProp, theme, placeholder, slashMenuItems]
+  );
+
   const editor = useEditor({
-    extensions: [
-      StarterKit.configure({
-        codeBlock: false,
-        dropcursor: {
-          color: theme.palette.secondary.main,
-          width: 2,
-        },
-      }),
-      Placeholder.configure({ placeholder }),
-      TaskList,
-      TaskItem.configure({ nested: true }),
-      Highlight.configure({ multicolor: true }),
-      TextAlign.configure({ types: ["heading", "paragraph"] }),
-      CustomImage.configure({ allowBase64: true, inline: false }),
-      CodeBlockLowlight.configure({ lowlight }),
-      TextStyleKit,
-      Underline,
-      Superscript,
-      Subscript,
-      Typography,
-      Link.configure({
-        openOnClick: false,
-        HTMLAttributes: { rel: "noopener noreferrer", target: "_blank" },
-      }),
-      Table.configure({ resizable: true }),
-      TableRow,
-      TableHeader,
-      TableCell,
-      Youtube.configure({ inline: false, ccLanguage: "en" }),
-      CharacterCount,
-      SlashCommands.configure({
-        suggestion: {
-          ...(SlashCommands.options?.suggestion ?? {}),
-          ...(slashMenuItems ? { customItems: slashMenuItems } : {}),
-        },
-      }),
-    ],
+    extensions: resolvedExtensions,
     content,
     editable,
     editorProps: {
@@ -174,7 +103,7 @@ const DocsEditor: React.FC<DocsEditorProps> = ({
           editor={editor}
           theme={theme}
           fileInputRef={fileInputRef}
-          toolbarConfig={toolbar}
+          {...(toolbar ? { toolbarConfig: toolbar } : {})}
         />
       )}
 

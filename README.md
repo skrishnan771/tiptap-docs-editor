@@ -76,6 +76,7 @@ function App() {
 | `content`            | `string`                   | Yes      | —                  | Initial HTML content for the editor                          |
 | `theme`              | `Theme`                    | Yes      | —                  | MUI theme object (from `createTheme()`)                      |
 | `onChange`           | `(html: string) => void`   | Yes      | —                  | Called with the updated HTML on every edit                   |
+| `extensions`         | `AnyExtension[]`           | No       | built-in defaults  | Custom Tiptap extensions array (overrides all defaults)      |
 | `placeholder`        | `string`                   | No       | `"Start writing…"` | Placeholder text shown when the editor is empty              |
 | `onReady`            | `(editor: Editor) => void` | No       | —                  | Called once with the Tiptap `Editor` instance after creation |
 | `editable`           | `boolean`                  | No       | `true`             | Whether the editor is editable or read-only                  |
@@ -87,22 +88,70 @@ function App() {
 ### Exports
 
 ```ts
-import { DocsEditor } from "tiptap-docs-editor";
+import { DocsEditor, getDefaultExtensions, CustomImage, SlashCommands } from "tiptap-docs-editor";
 import type {
   DocsEditorProps,
   ToolbarConfig,
   CustomSlashItem,
   ToolbarAction,
+  DefaultExtensionOptions,
 } from "tiptap-docs-editor";
 ```
 
-| Export            | Kind      | Description                                 |
-| ----------------- | --------- | ------------------------------------------- |
-| `DocsEditor`      | Component | The main editor component                   |
-| `DocsEditorProps` | Type      | Props interface for `DocsEditor`            |
-| `ToolbarConfig`   | Type      | Configuration to show/hide toolbar sections |
-| `CustomSlashItem` | Type      | Shape of a custom slash menu item           |
-| `ToolbarAction`   | Type      | Union of all built-in toolbar action names  |
+| Export                    | Kind      | Description                                              |
+| ------------------------- | --------- | -------------------------------------------------------- |
+| `DocsEditor`              | Component | The main editor component                                |
+| `getDefaultExtensions`    | Function  | Returns the default extensions array (for customization) |
+| `CustomImage`             | Extension | Image extension with alignment & style support           |
+| `SlashCommands`           | Extension | Slash command menu extension                             |
+| `DocsEditorProps`         | Type      | Props interface for `DocsEditor`                         |
+| `ToolbarConfig`           | Type      | Configuration to show/hide toolbar sections              |
+| `CustomSlashItem`         | Type      | Shape of a custom slash menu item                        |
+| `ToolbarAction`           | Type      | Union of all built-in toolbar action names               |
+| `DefaultExtensionOptions` | Type      | Options accepted by `getDefaultExtensions()`             |
+
+### Custom Extensions
+
+By default, `DocsEditor` includes a full set of Tiptap extensions out of the box — **no `extensions` prop is needed**. The Quick Start example above works without any extension configuration.
+
+The `extensions` prop is only for advanced use cases where you want to **replace** the built-in extensions entirely — for example, to reduce bundle size by including only what you need:
+
+```tsx
+import { DocsEditor, CustomImage } from "tiptap-docs-editor";
+import StarterKit from "@tiptap/starter-kit";
+import Placeholder from "@tiptap/extension-placeholder";
+
+// Minimal editor — only basic formatting + images (smaller bundle)
+<DocsEditor
+  extensions={[
+    StarterKit,
+    Placeholder.configure({ placeholder: "Type here…" }),
+    CustomImage,
+  ]}
+  content={content}
+  theme={theme}
+  onChange={setContent}
+/>
+```
+
+You can also start from the defaults and selectively remove extensions:
+
+```tsx
+import { DocsEditor, getDefaultExtensions } from "tiptap-docs-editor";
+
+const extensions = getDefaultExtensions({ theme, placeholder: "Write…" })
+  .filter((ext) => ext.name !== "youtube"); // remove YouTube
+
+<DocsEditor extensions={extensions} content={content} theme={theme} onChange={setContent} />
+```
+
+`getDefaultExtensions` accepts:
+
+| Option           | Type               | Description                          |
+| ---------------- | ------------------ | ------------------------------------ |
+| `theme`          | `Theme`            | MUI theme (required for slash menu)  |
+| `placeholder`    | `string`           | Placeholder text                     |
+| `slashMenuItems` | `CustomSlashItem[]`| Additional slash menu entries        |
 
 ### `ToolbarConfig`
 

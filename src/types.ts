@@ -1,6 +1,6 @@
 import type { Editor } from "@tiptap/react";
 import type { Theme } from "@mui/material/styles";
-import type { Range } from "@tiptap/core";
+import type { AnyExtension, Range } from "@tiptap/core";
 
 export interface ToolbarConfig {
   history?: boolean;
@@ -26,6 +26,8 @@ export interface CustomSlashItem {
 }
 
 export interface DocsEditorProps {
+  /** Custom Tiptap extensions. When provided, replaces all built-in extensions. */
+  extensions?: AnyExtension[];
   content: string;
   placeholder?: string;
   theme: Theme;
@@ -33,6 +35,7 @@ export interface DocsEditorProps {
   onReady?: (editor: Editor) => void;
   editable?: boolean;
   toolbar?: ToolbarConfig;
+  /** Slash menu items (only used when `extensions` is not provided). */
   slashMenuItems?: CustomSlashItem[];
   showCharacterCount?: boolean;
   spellCheck?: boolean;

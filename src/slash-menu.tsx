@@ -278,7 +278,7 @@ const SlashMenuComponent = forwardRef<
       grouped.push({ category: cat, items: [] });
       lastCat = cat;
     }
-    grouped[grouped.length - 1].items.push({ item, globalIndex: index });
+    grouped[grouped.length - 1]!.items.push({ item, globalIndex: index });
   });
 
   return (
