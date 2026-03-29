@@ -1,6 +1,6 @@
 {
   "name": "tiptap-docs-editor",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "description": "Notion-style rich text editor built on Tiptap 3 and MUI",
   "license": "MIT",
   "main": "dist/index.js",
