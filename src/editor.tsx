@@ -6,8 +6,11 @@ import DragHandle from "@tiptap/extension-drag-handle-react";
 
 import Box from "@mui/material/Box";
 import MuiTypography from "@mui/material/Typography";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
 import { alpha } from "@mui/material/styles";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
+import AddIcon from "@mui/icons-material/Add";
 
 import type { DocsEditorProps } from "./types";
 import { useEditorStyles } from "./hooks";
@@ -46,7 +49,11 @@ const DocsEditor: React.FC<DocsEditorProps> = ({
   const resolvedExtensions = useMemo(
     () =>
       extensionsProp ??
-      getDefaultExtensions({ theme, placeholder, slashMenuItems }),
+      getDefaultExtensions({
+        theme,
+        placeholder,
+        slashMenuItems,
+      }),
     [extensionsProp, theme, placeholder, slashMenuItems]
   );
 
@@ -81,15 +88,10 @@ const DocsEditor: React.FC<DocsEditorProps> = ({
 
   if (!editor) return null;
 
+  const brHalf = `${Number(theme.shape.borderRadius) / 2}px`;
+
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100%",
-        position: "relative",
-      }}
-    >
+    <Box className="notion-editor-wrapper">
       <input
         ref={fileInputRef}
         type="file"
@@ -108,52 +110,75 @@ const DocsEditor: React.FC<DocsEditorProps> = ({
       )}
 
       <BubbleToolbar editor={editor} theme={theme} />
-
       <ImageBubbleMenu editor={editor} theme={theme} />
 
+      {/* Drag handle with optional add block button */}
       {editable && (
         <DragHandle
           editor={editor}
           nested={{ edgeDetection: { threshold: -16 } }}
         >
-          <Box
-            sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              width: 22,
-              height: 26,
-              cursor: "grab",
-              borderRadius: `${Number(theme.shape.borderRadius) / 2}px`,
-              color: theme.palette.text.disabled,
-              opacity: 0.5,
-              transition: "all 0.2s ease",
-              "&:hover": {
-                opacity: 1,
-                color: theme.palette.text.secondary,
-                bgcolor: alpha(theme.palette.text.primary, 0.08),
-                transform: "scale(1.1)",
-              },
-              "&:active": {
-                cursor: "grabbing",
-                transform: "scale(0.95)",
-              },
-            }}
-          >
-            <DragIndicatorIcon sx={{ fontSize: 16 }} />
+          <Box className="notion-drag-handle">
+            <Tooltip title="Add block">
+              <IconButton
+                size="small"
+                onClick={() => {
+                  const { to } = editor.state.selection;
+                  editor
+                    .chain()
+                    .focus()
+                    .insertContentAt(to, { type: "paragraph" })
+                    .run();
+                }}
+                sx={{
+                  width: 20,
+                  height: 20,
+                  color: theme.palette.text.disabled,
+                  opacity: 0.5,
+                  transition: "all 0.2s ease",
+                  "&:hover": {
+                    opacity: 1,
+                    color: theme.palette.text.secondary,
+                    bgcolor: alpha(theme.palette.text.primary, 0.08),
+                  },
+                }}
+              >
+                <AddIcon sx={{ fontSize: 14 }} />
+              </IconButton>
+            </Tooltip>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                width: 20,
+                height: 24,
+                cursor: "grab",
+                borderRadius: brHalf,
+                color: theme.palette.text.disabled,
+                opacity: 0.5,
+                transition: "all 0.2s ease",
+                "&:hover": {
+                  opacity: 1,
+                  color: theme.palette.text.secondary,
+                  bgcolor: alpha(theme.palette.text.primary, 0.08),
+                },
+                "&:active": {
+                  cursor: "grabbing",
+                },
+              }}
+            >
+              <DragIndicatorIcon sx={{ fontSize: 16 }} />
+            </Box>
           </Box>
         </DragHandle>
       )}
 
-      <Box
-        sx={{
-          flex: 1,
-          overflowY: "auto",
-          px: { xs: 2.5, sm: 5 },
-          py: 3,
-        }}
-      >
-        <EditorContent editor={editor} />
+      {/* Content area */}
+      <Box className="notion-editor-layout">
+        <Box className="notion-editor-content">
+          <EditorContent editor={editor} />
+        </Box>
       </Box>
 
       {showCharacterCount && editor && (

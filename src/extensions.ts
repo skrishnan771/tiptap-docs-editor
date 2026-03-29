@@ -23,6 +23,7 @@ import { Link } from "@tiptap/extension-link";
 import { Youtube } from "@tiptap/extension-youtube";
 import { CharacterCount } from "@tiptap/extension-character-count";
 import { Typography } from "@tiptap/extension-typography";
+import Emoji, { gitHubEmojis } from "@tiptap/extension-emoji";
 
 import { SlashCommands } from "./slash-menu";
 import type { CustomSlashItem } from "./types";
@@ -75,13 +76,19 @@ export interface DefaultExtensionOptions {
 export function getDefaultExtensions(
   options: DefaultExtensionOptions
 ): AnyExtension[] {
-  const { theme, placeholder = "Start writing…", slashMenuItems } = options;
+  const {
+    theme,
+    placeholder = "Start writing…",
+    slashMenuItems,
+  } = options;
 
   const lowlight = createLowlight(common);
 
   return [
     StarterKit.configure({
       codeBlock: false,
+      link: false,
+      underline: false,
       dropcursor: {
         color: theme.palette.secondary.main,
         width: 2,
@@ -114,6 +121,10 @@ export function getDefaultExtensions(
         ...(SlashCommands.options?.suggestion ?? {}),
         ...(slashMenuItems ? { customItems: slashMenuItems } : {}),
       },
+    }),
+    Emoji.configure({
+      emojis: gitHubEmojis,
+      enableEmoticons: true,
     }),
   ];
 }

@@ -103,7 +103,7 @@ export const TBtn: React.FC<{
 
   return (
     <Tooltip title={label} arrow placement="top">
-      <span>
+      <span style={{ cursor: disabled ? 'not-allowed' : 'pointer', opacity: disabled ? 0.35 : 1, transition: 'opacity 0.2s' }}>
         <IconButton
           size="small"
           disabled={disabled}

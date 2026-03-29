@@ -35,118 +35,198 @@ export function useEditorStyles(theme: Theme) {
     const br = Number(theme.shape.borderRadius);
     const isDark = theme.palette.mode === "dark";
 
+    /* Notion-like palette */
+    const bg = theme.palette.background.default;
+    const bgPaper = theme.palette.background.paper;
+    const text = theme.palette.text.primary;
+    const textSec = theme.palette.text.secondary;
+    const textDis = theme.palette.text.disabled;
+    const accent = theme.palette.secondary.main;
+    const accentDk = theme.palette.secondary.dark;
+    const divider = theme.palette.divider;
+    const codeBg = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.04)";
+    const blockquoteBg = isDark ? "rgba(255,255,255,0.03)" : "rgba(0,0,0,0.02)";
+    const preBg = isDark ? "#1e1e2e" : "#f6f6f9";
+
     el.textContent = `
+      /* ===== Notion-like Editor Wrapper ===== */
+      .notion-editor-wrapper {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        background: ${bg};
+        color: ${text};
+        font-family: ${theme.typography.fontFamily};
+        position: relative;
+      }
+
+      /* ===== Header ===== */
+      .notion-editor-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 16px;
+        border-bottom: 1px solid ${divider};
+        background: ${bgPaper};
+        flex-shrink: 0;
+        min-height: 48px;
+        position: sticky;
+        top: 0;
+        z-index: 3;
+      }
+      .notion-editor-header-left {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+      }
+      .notion-editor-header-right {
+        display: flex;
+        align-items: center;
+        gap: 4px;
+      }
+
+      /* ===== Layout: content + sidebar TOC ===== */
+      .notion-editor-layout {
+        display: flex;
+        flex: 1;
+        overflow: hidden;
+      }
+      .notion-editor-content {
+        flex: 1;
+        overflow-y: auto;
+        padding: 2rem 3rem;
+        min-width: 0;
+      }
+      @media (max-width: 768px) {
+        .notion-editor-content {
+          padding: 1.5rem 1.25rem;
+        }
+      }
+
+      /* ===== Tiptap ProseMirror ===== */
       .tiptap.ProseMirror {
         outline: none;
-        caret-color: ${theme.palette.secondary.main};
+        caret-color: ${accent};
         font-family: ${theme.typography.fontFamily};
-        font-size: ${theme.typography.body1.fontSize};
-        line-height: 1.8;
-        color: ${theme.palette.text.primary};
+        font-size: 1rem;
+        line-height: 1.75;
+        color: ${text};
         padding-left: 1.5rem;
         min-height: 200px;
       }
 
-      .tiptap p { margin: 0 0 0.4em; }
+      .tiptap p { margin: 0 0 0.5em; }
 
       .tiptap p.is-empty.is-editor-empty::before,
       .tiptap .is-empty:first-child::before {
         content: attr(data-placeholder);
-        color: ${theme.palette.text.disabled};
+        color: ${textDis};
         pointer-events: none; float: left; height: 0;
       }
 
+      /* Headings */
       .tiptap h1, .tiptap h2, .tiptap h3 {
         font-family: ${theme.typography.fontFamily};
-        font-weight: ${theme.typography.h2.fontWeight};
-        color: ${theme.palette.text.primary};
+        font-weight: 700;
+        color: ${text};
         line-height: 1.3;
-        margin: 1.4em 0 0.3em;
+        margin: 1.5em 0 0.4em;
       }
-      .tiptap h1 { font-size: ${theme.typography.h3.fontSize}; }
-      .tiptap h2 { font-size: ${theme.typography.h4.fontSize}; }
-      .tiptap h3 { font-size: ${theme.typography.h5.fontSize}; }
+      .tiptap h1 { font-size: 1.875rem; }
+      .tiptap h2 { font-size: 1.5rem; }
+      .tiptap h3 { font-size: 1.25rem; }
 
+      /* Inline formatting */
       .tiptap strong { font-weight: 700; }
       .tiptap em     { font-style: italic; }
       .tiptap u      { text-decoration: underline; text-underline-offset: 3px; }
-      .tiptap s      { text-decoration: line-through; opacity: 0.6; }
+      .tiptap s      { text-decoration: line-through; opacity: 0.55; }
 
+      /* Inline code */
       .tiptap code {
-        background: ${alpha(theme.palette.secondary.main, 0.1)};
-        color: ${theme.palette.secondary.dark};
+        background: ${codeBg};
+        color: ${isDark ? "#e06c75" : "#d63384"};
         border-radius: 4px;
-        padding: 0.15em 0.35em;
-        font-size: 0.88em;
-        font-family: 'Cascadia Mono', 'Roboto Mono', monospace;
+        padding: 0.15em 0.4em;
+        font-size: 0.85em;
+        font-family: 'SF Mono', 'Cascadia Mono', 'Roboto Mono', monospace;
       }
       .tiptap pre code {
         background: none; color: inherit; padding: 0;
         border-radius: 0; font-size: inherit;
       }
 
+      /* Mark / highlight */
       .tiptap mark {
-        background-color: ${alpha("#facc15", 0.4)};
+        background-color: ${alpha("#facc15", isDark ? 0.3 : 0.4)};
         border-radius: 2px;
         padding: 0.05em 0.15em;
         color: inherit;
       }
 
+      /* Links */
       .tiptap a {
-        color: ${theme.palette.secondary.main};
+        color: ${accent};
         text-decoration: underline;
         text-underline-offset: 3px;
         cursor: pointer;
         transition: color 0.15s;
       }
-      .tiptap a:hover { color: ${theme.palette.secondary.dark}; }
+      .tiptap a:hover { color: ${accentDk}; }
 
+      /* Lists */
       .tiptap ul   { list-style: disc;    padding-left: 1.5em; margin: 0.3em 0; }
       .tiptap ol   { list-style: decimal; padding-left: 1.5em; margin: 0.3em 0; }
-      .tiptap li   { line-height: 1.8; margin: 0.15em 0; }
+      .tiptap li   { line-height: 1.75; margin: 0.15em 0; }
 
+      /* Task lists */
       .tiptap ul[data-type="taskList"] { list-style: none; padding-left: 0; }
       .tiptap ul[data-type="taskList"] li {
         display: flex; align-items: flex-start; gap: 8px; margin: 0.3em 0;
       }
       .tiptap ul[data-type="taskList"] li > label { flex-shrink: 0; margin-top: 4px; }
       .tiptap ul[data-type="taskList"] li > label input[type="checkbox"] {
-        width: 15px; height: 15px; cursor: pointer;
-        accent-color: ${theme.palette.secondary.main};
+        width: 16px; height: 16px; cursor: pointer;
+        accent-color: ${accent};
+        border-radius: 3px;
       }
       .tiptap ul[data-type="taskList"] li[data-checked="true"] > div {
         opacity: 0.4; text-decoration: line-through;
       }
 
+      /* Blockquote */
       .tiptap blockquote {
-        border-left: 3px solid ${theme.palette.secondary.main};
+        border-left: 3px solid ${accent};
         margin: 0.8em 0;
-        padding: 0.4em 0 0.4em 1em;
-        background: ${alpha(theme.palette.secondary.main, 0.04)};
+        padding: 0.6em 0 0.6em 1.2em;
+        background: ${blockquoteBg};
         border-radius: 0 ${br / 2}px ${br / 2}px 0;
-        color: ${theme.palette.text.secondary};
+        color: ${textSec};
       }
       .tiptap blockquote p { margin: 0; }
 
+      /* Horizontal rule */
       .tiptap hr {
         border: none;
-        border-top: 2px solid ${theme.palette.divider};
+        border-top: 2px solid ${divider};
         margin: 1.5em 0;
       }
 
+      /* Code block */
       .tiptap pre {
-        background: ${isDark ? "#1a1a2e" : "#f5f5f8"};
-        border: 1px solid ${theme.palette.divider};
-        border-radius: ${br}px;
+        background: ${preBg};
+        border: 1px solid ${divider};
+        border-radius: ${Math.max(br, 8)}px;
         padding: 1em 1.25em;
         margin: 0.8em 0;
         overflow-x: auto;
-        font-family: 'Cascadia Mono', 'Roboto Mono', 'Consolas', monospace;
+        font-family: 'SF Mono', 'Cascadia Mono', 'Roboto Mono', 'Consolas', monospace;
         font-size: 0.85em;
-        line-height: 1.6;
-        color: ${theme.palette.text.primary};
+        line-height: 1.65;
+        color: ${text};
       }
 
+      /* Syntax highlighting */
       .tiptap pre .hljs-keyword,
       .tiptap pre .hljs-selector-tag { color: ${isDark ? "#c678dd" : "#a626a4"}; }
       .tiptap pre .hljs-string,
@@ -164,6 +244,7 @@ export function useEditorStyles(theme: Theme) {
       .tiptap pre .hljs-deletion { color: ${isDark ? "#e06c75" : "#e45649"}; }
       .tiptap pre .hljs-punctuation { color: ${isDark ? "#abb2bf" : "#383a42"}; }
 
+      /* Images */
       .tiptap img {
         max-width: 100%;
         height: auto;
@@ -174,8 +255,26 @@ export function useEditorStyles(theme: Theme) {
         transition: outline 0.15s ease;
       }
       .tiptap img.ProseMirror-selectednode {
-        outline: 2px solid ${theme.palette.secondary.main};
+        outline: 2px solid ${accent};
         outline-offset: 2px;
+      }
+
+      /* Emoji */
+      .tiptap img[data-emoji-id] {
+        display: inline;
+        width: 1.2em;
+        height: 1.2em;
+        vertical-align: -0.2em;
+        margin: 0 0.05em;
+        border-radius: 0;
+      }
+      .tiptap span[data-type="emoji"] img {
+        display: inline;
+        width: 1.2em;
+        height: 1.2em;
+        vertical-align: -0.2em;
+        margin: 0 0.05em;
+        border-radius: 0;
       }
 
       /* ---------- Tables ---------- */
@@ -188,14 +287,14 @@ export function useEditorStyles(theme: Theme) {
       }
       .tiptap th,
       .tiptap td {
-        border: 1px solid ${theme.palette.divider};
+        border: 1px solid ${divider};
         padding: 0.5em 0.75em;
         min-width: 80px;
         vertical-align: top;
         position: relative;
       }
       .tiptap th {
-        background: ${alpha(theme.palette.text.primary, 0.04)};
+        background: ${alpha(text, 0.04)};
         font-weight: 600;
         text-align: left;
       }
@@ -203,7 +302,7 @@ export function useEditorStyles(theme: Theme) {
         content: '';
         position: absolute;
         inset: 0;
-        background: ${alpha(theme.palette.secondary.main, 0.12)};
+        background: ${alpha(accent, 0.12)};
         pointer-events: none;
         z-index: 1;
       }
@@ -213,7 +312,7 @@ export function useEditorStyles(theme: Theme) {
         top: 0;
         bottom: -2px;
         width: 4px;
-        background-color: ${theme.palette.secondary.main};
+        background-color: ${accent};
         pointer-events: none;
       }
       .tiptap.resize-cursor {
@@ -247,6 +346,7 @@ export function useEditorStyles(theme: Theme) {
       .tiptap sup { font-size: 0.75em; vertical-align: super; }
       .tiptap sub { font-size: 0.75em; vertical-align: sub; }
 
+      /* Selected node */
       .ProseMirror-selectednode {
         position: relative;
       }
@@ -254,28 +354,39 @@ export function useEditorStyles(theme: Theme) {
         content: '';
         position: absolute;
         inset: -2px;
-        background: ${alpha(theme.palette.secondary.main, 0.08)};
-        border: 2px solid ${alpha(theme.palette.secondary.main, 0.3)};
+        background: ${alpha(accent, 0.08)};
+        border: 2px solid ${alpha(accent, 0.3)};
         border-radius: ${br / 2}px;
         pointer-events: none;
         z-index: -1;
       }
 
+      /* Selection */
       .tiptap ::selection {
         background: ${alpha(theme.palette.primary.main, 0.2)};
-        color: ${theme.palette.text.primary};
+        color: ${text};
       }
 
+      /* Drop cursor */
       .ProseMirror-dropcursor {
-        border-color: ${theme.palette.secondary.main} !important;
+        border-color: ${accent} !important;
         border-width: 2px !important;
         opacity: 1 !important;
       }
 
+      /* ---------- Drag handle area ---------- */
+      .notion-drag-handle {
+        display: flex;
+        align-items: center;
+        gap: 2px;
+      }
+
       /* ---------- Print styles ---------- */
       @media print {
-        .tiptap-toolbar, .tiptap-bubble-menu { display: none !important; }
+        .notion-editor-header,
+        .tiptap-bubble-menu { display: none !important; }
         .tiptap.ProseMirror { padding: 0; min-height: auto; }
+        .notion-editor-content { padding: 0; }
       }
     `;
 
