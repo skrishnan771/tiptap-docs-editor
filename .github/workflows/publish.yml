@@ -21,9 +21,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build project
-        run: npm run build --if-present
-
       - name: Publish to npm
-        # No --provenance flag is needed; OIDC generates it automatically
+        # prepublishOnly in package.json runs "npm run build" automatically
         run: npm publish --access public
