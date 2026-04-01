@@ -2,7 +2,6 @@
 
 import React from "react";
 import type { Editor } from "@tiptap/react";
-import type { Theme } from "@mui/material/styles";
 import Select from "@mui/material/Select";
 import MenuItem from "@mui/material/MenuItem";
 import FormControl from "@mui/material/FormControl";
@@ -19,7 +18,6 @@ const FONT_SIZES = ["12", "14", "16", "18", "20", "24", "28", "32", "36", "48"];
 
 interface FontControlsProps {
   editor: Editor;
-  theme: Theme;
 }
 
 export const FontFamilySelect: React.FC<FontControlsProps> = ({ editor }) => {

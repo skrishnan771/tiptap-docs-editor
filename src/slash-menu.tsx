@@ -34,7 +34,7 @@ import YouTubeIcon from "@mui/icons-material/YouTube";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
 
-export interface SlashItem {
+interface SlashItem {
   title: string;
   description: string;
   icon: React.ReactNode;
@@ -216,7 +216,7 @@ const SLASH_ITEMS: SlashItem[] = [
   },
 ];
 
-export interface SlashMenuRef {
+interface SlashMenuRef {
   onKeyDown: (props: { event: KeyboardEvent }) => boolean;
 }
 
@@ -286,6 +286,7 @@ const SlashMenuComponent = forwardRef<
       elevation={8}
       sx={{
         width: 300,
+        maxWidth: "calc(100vw - 24px)",
         maxHeight: 380,
         overflowY: "auto",
         py: 0.5,
@@ -411,7 +412,14 @@ function updatePosition(
 ) {
   const rect = props.clientRect?.();
   if (!rect) return;
-  popup.style.left = `${rect.left + window.scrollX}px`;
+  const popupWidth = 300; // matches Paper width
+  const margin = 12;
+  let left = rect.left + window.scrollX;
+  // Prevent clipping off the right edge on narrow screens
+  if (left + popupWidth + margin > window.innerWidth) {
+    left = Math.max(margin, window.innerWidth - popupWidth - margin);
+  }
+  popup.style.left = `${left}px`;
   popup.style.top = `${rect.bottom + window.scrollY + 4}px`;
 }
 

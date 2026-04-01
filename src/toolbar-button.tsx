@@ -21,7 +21,7 @@ export type ToolbarAction =
   | "addRowAfter" | "addRowBefore" | "deleteRow" | "deleteTable" | "mergeCells" | "splitCell"
   | "custom";
 
-export function dispatchAction(editor: Editor, action: ToolbarAction) {
+function dispatchAction(editor: Editor, action: ToolbarAction) {
   const c = editor.chain().focus();
   switch (action) {
     case "bold": c.toggleBold().run(); break;
@@ -89,6 +89,8 @@ export function isActive(editor: Editor, action: ToolbarAction): boolean {
   }
 }
 
+import type { SxProps } from "@mui/material/styles";
+
 export const TBtn: React.FC<{
   label: string;
   action: ToolbarAction;
@@ -96,8 +98,9 @@ export const TBtn: React.FC<{
   theme: Theme;
   disabled?: boolean;
   onCustomAction?: (e?: React.MouseEvent<HTMLButtonElement>) => void;
+  sx?: SxProps<Theme>;
   children: React.ReactNode;
-}> = ({ label, action, editor, theme, disabled = false, onCustomAction, children }) => {
+}> = ({ label, action, editor, theme, disabled = false, onCustomAction, sx: extraSx, children }) => {
   const accent = theme.palette.secondary.main;
   const active = isActive(editor, action);
 
@@ -121,17 +124,20 @@ export const TBtn: React.FC<{
             color: active ? accent : theme.palette.text.secondary,
             backgroundColor: active ? alpha(accent, 0.12) : "transparent",
           }}
-          sx={{
-            borderRadius: `${theme.shape.borderRadius}px`,
-            transition: theme.transitions.create(
-              ["background-color", "color"],
-              { duration: theme.transitions.duration.shorter }
-            ),
-            "&:hover": {
-              bgcolor: active ? alpha(accent, 0.2) : theme.palette.action.hover,
-              color: active ? accent : theme.palette.text.primary,
+          sx={[
+            {
+              borderRadius: `${theme.shape.borderRadius}px`,
+              transition: theme.transitions.create(
+                ["background-color", "color"],
+                { duration: theme.transitions.duration.shorter }
+              ),
+              "&:hover": {
+                bgcolor: active ? alpha(accent, 0.2) : theme.palette.action.hover,
+                color: active ? accent : theme.palette.text.primary,
+              },
             },
-          }}
+            ...(Array.isArray(extraSx) ? extraSx : extraSx ? [extraSx] : []),
+          ]}
         >
           {children}
         </IconButton>
@@ -144,47 +150,20 @@ export const HBtn: React.FC<{
   level: 1 | 2 | 3;
   editor: Editor;
   theme: Theme;
-}> = ({ level, editor, theme }) => {
-  const accent = theme.palette.secondary.main;
-  const action = `h${level}` as ToolbarAction;
-  const active = isActive(editor, action);
-
-  return (
-    <Tooltip title={`Heading ${level}`} arrow placement="top">
-      <span>
-        <IconButton
-          size="small"
-          data-action={action}
-          onMouseDown={(e) => {
-            e.preventDefault();
-            dispatchAction(editor, e.currentTarget.dataset.action as ToolbarAction);
-          }}
-          style={{
-            color: active ? accent : theme.palette.text.secondary,
-            backgroundColor: active ? alpha(accent, 0.12) : "transparent",
-          }}
-          sx={{
-            borderRadius: `${theme.shape.borderRadius}px`,
-            fontFamily: theme.typography.fontFamily,
-            fontSize: "0.7rem",
-            fontWeight: 700,
-            width: 34,
-            height: 34,
-            transition: theme.transitions.create(
-              ["background-color", "color"],
-              { duration: theme.transitions.duration.shorter }
-            ),
-            "&:hover": {
-              bgcolor: active
-                ? alpha(accent, 0.2)
-                : theme.palette.action.hover,
-              color: active ? accent : theme.palette.text.primary,
-            },
-          }}
-        >
-          H{level}
-        </IconButton>
-      </span>
-    </Tooltip>
-  );
-};
+}> = ({ level, editor, theme }) => (
+  <TBtn
+    label={`Heading ${level}`}
+    action={`h${level}` as ToolbarAction}
+    editor={editor}
+    theme={theme}
+    sx={{
+      fontFamily: theme.typography.fontFamily,
+      fontSize: "0.7rem",
+      fontWeight: 700,
+      width: 34,
+      height: 34,
+    }}
+  >
+    H{level}
+  </TBtn>
+);

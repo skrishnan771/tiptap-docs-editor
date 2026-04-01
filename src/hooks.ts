@@ -1,8 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { alpha, type Theme } from "@mui/material/styles";
 import type { Editor } from "@tiptap/react";
+
+type AnchorPos = { top: number; left: number };
+
+export function useAnchorPosition() {
+  const [anchorPos, setAnchorPos] = useState<AnchorPos | null>(null);
+
+  const open = useCallback((el: HTMLElement) => {
+    const rect = el.getBoundingClientRect();
+    setAnchorPos({ top: rect.bottom + 4, left: rect.left });
+  }, []);
+
+  const close = useCallback(() => setAnchorPos(null), []);
+
+  const popoverProps = {
+    open: Boolean(anchorPos),
+    anchorReference: "anchorPosition" as const,
+    anchorPosition: anchorPos ?? undefined,
+    onClose: close,
+  };
+
+  return { anchorPos, open, close, popoverProps };
+}
 
 export function useEditorState(editor: Editor | null): number {
   const [tick, setTick] = useState(0);

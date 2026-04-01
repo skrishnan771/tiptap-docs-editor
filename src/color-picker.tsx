@@ -11,6 +11,7 @@ import Popover from "@mui/material/Popover";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
+import { useAnchorPosition } from "./hooks";
 
 const PRESET_COLORS = [
   "#000000", "#434343", "#666666", "#999999", "#cccccc", "#ffffff",
@@ -35,7 +36,7 @@ export const ColorPickerButton: React.FC<ColorPickerButtonProps> = ({
   icon,
   label,
 }) => {
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const { open: openPopover, close: closePopover, popoverProps } = useAnchorPosition();
   const [customColor, setCustomColor] = useState("#000000");
 
   const currentColor =
@@ -49,7 +50,7 @@ export const ColorPickerButton: React.FC<ColorPickerButtonProps> = ({
     } else {
       editor.chain().focus().toggleHighlight({ color }).run();
     }
-    setAnchorEl(null);
+    closePopover();
   };
 
   const removeColor = () => {
@@ -58,7 +59,7 @@ export const ColorPickerButton: React.FC<ColorPickerButtonProps> = ({
     } else {
       editor.chain().focus().unsetHighlight().run();
     }
-    setAnchorEl(null);
+    closePopover();
   };
 
   return (
@@ -69,7 +70,7 @@ export const ColorPickerButton: React.FC<ColorPickerButtonProps> = ({
             size="small"
             onMouseDown={(e) => {
               e.preventDefault();
-              setAnchorEl(e.currentTarget);
+              openPopover(e.currentTarget);
             }}
             sx={{
               borderRadius: `${theme.shape.borderRadius}px`,
@@ -102,12 +103,8 @@ export const ColorPickerButton: React.FC<ColorPickerButtonProps> = ({
       </Tooltip>
 
       <Popover
-        open={Boolean(anchorEl)}
-        anchorEl={anchorEl}
-        onClose={() => setAnchorEl(null)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-        transformOrigin={{ vertical: "top", horizontal: "left" }}
-        slotProps={{ paper: { sx: { p: 1.5, width: 220 } } }}
+        {...popoverProps}
+        slotProps={{ paper: { sx: { p: 1.5, width: 220, maxWidth: "calc(100vw - 24px)" } } }}
       >
         <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: "block" }}>
           {label}

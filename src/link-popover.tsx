@@ -15,6 +15,7 @@ import LinkIcon from "@mui/icons-material/Link";
 import LinkOffIcon from "@mui/icons-material/LinkOff";
 import { alpha } from "@mui/material/styles";
 import { isActive } from "./toolbar-button";
+import { useAnchorPosition } from "./hooks";
 
 interface LinkPopoverProps {
   editor: Editor;
@@ -27,7 +28,7 @@ export const LinkPopoverButton: React.FC<LinkPopoverProps> = ({
   theme,
   iconSize = 20,
 }) => {
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const { open: openPopover, close: closePopover, popoverProps } = useAnchorPosition();
   const [url, setUrl] = useState("");
   const [openInNewTab, setOpenInNewTab] = useState(true);
 
@@ -40,9 +41,9 @@ export const LinkPopoverButton: React.FC<LinkPopoverProps> = ({
       const target = editor.getAttributes("link").target as string | undefined;
       setUrl(existing ?? "https://");
       setOpenInNewTab(target === "_blank");
-      setAnchorEl(el);
+      openPopover(el);
     },
-    [editor]
+    [editor, openPopover]
   );
 
   const applyLink = useCallback(() => {
@@ -55,13 +56,13 @@ export const LinkPopoverButton: React.FC<LinkPopoverProps> = ({
         .setLink({ href: url, target: openInNewTab ? "_blank" : null })
         .run();
     }
-    setAnchorEl(null);
-  }, [editor, url, openInNewTab]);
+    closePopover();
+  }, [editor, url, openInNewTab, closePopover]);
 
   const removeLink = useCallback(() => {
     editor.chain().focus().unsetLink().run();
-    setAnchorEl(null);
-  }, [editor]);
+    closePopover();
+  }, [editor, closePopover]);
 
   return (
     <>
@@ -102,12 +103,8 @@ export const LinkPopoverButton: React.FC<LinkPopoverProps> = ({
       </Tooltip>
 
       <Popover
-        open={Boolean(anchorEl)}
-        anchorEl={anchorEl}
-        onClose={() => setAnchorEl(null)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-        transformOrigin={{ vertical: "top", horizontal: "left" }}
-        slotProps={{ paper: { sx: { p: 2, width: 320 } } }}
+        {...popoverProps}
+        slotProps={{ paper: { sx: { p: 2, width: 320, maxWidth: "calc(100vw - 24px)" } } }}
       >
         <TextField
           size="small"

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import type { Editor } from "@tiptap/react";
 import type { Theme } from "@mui/material/styles";
 import { alpha } from "@mui/material/styles";
@@ -31,6 +31,8 @@ import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
 import { TBtn } from "./toolbar-button";
 import { LinkPopoverButton } from "./link-popover";
 import { ColorPickerButton } from "./color-picker";
+import { useAnchorPosition } from "./hooks";
+import { bubbleMenuPaperSx } from "./utils";
 
 function getCurrentBlockLabel(editor: Editor): string {
   if (editor.isActive("heading", { level: 1 })) return "Heading 1";
@@ -60,7 +62,7 @@ export const BubbleToolbar: React.FC<{ editor: Editor; theme: Theme }> = ({
   editor,
   theme,
 }) => {
-  const [turnIntoPos, setTurnIntoPos] = useState<{ top: number; left: number } | null>(null);
+  const { open: openTurnInto, close: closeTurnInto, popoverProps: turnIntoProps } = useAnchorPosition();
 
   return (
     <BubbleMenu
@@ -75,27 +77,14 @@ export const BubbleToolbar: React.FC<{ editor: Editor; theme: Theme }> = ({
         return true;
       }}
     >
-      <Paper
-        elevation={8}
-        sx={{
-          display: "flex",
-          alignItems: "center",
-          gap: 0.25,
-          px: 0.5,
-          py: 0.25,
-          borderRadius: `${theme.shape.borderRadius}px`,
-          bgcolor: theme.palette.background.paper,
-          border: `1px solid ${theme.palette.divider}`,
-        }}
-      >
+      <Paper elevation={8} sx={bubbleMenuPaperSx(theme)}>
         {/* Turn into dropdown */}
         <Button
           size="small"
           endIcon={<KeyboardArrowDownIcon sx={{ fontSize: 14 }} />}
           onMouseDown={(e) => {
             e.preventDefault();
-            const rect = e.currentTarget.getBoundingClientRect();
-            setTurnIntoPos({ top: rect.bottom + 4, left: rect.left });
+            openTurnInto(e.currentTarget);
           }}
           sx={{
             textTransform: "none",
@@ -112,10 +101,7 @@ export const BubbleToolbar: React.FC<{ editor: Editor; theme: Theme }> = ({
           {getCurrentBlockLabel(editor)}
         </Button>
         <Menu
-          open={Boolean(turnIntoPos)}
-          onClose={() => setTurnIntoPos(null)}
-          anchorReference="anchorPosition"
-          anchorPosition={turnIntoPos ?? undefined}
+          {...turnIntoProps}
           slotProps={{
             paper: {
               sx: {
@@ -133,7 +119,7 @@ export const BubbleToolbar: React.FC<{ editor: Editor; theme: Theme }> = ({
               dense
               onClick={() => {
                 opt.action()(editor);
-                setTurnIntoPos(null);
+                closeTurnInto();
               }}
               sx={{ fontSize: "0.8rem" }}
             >

@@ -1,24 +1,17 @@
-import type { Editor } from "@tiptap/react";
+import type { Theme } from "@mui/material/styles";
+import type { SxProps } from "@mui/material/styles";
 
-/** Toggle or insert a link, preserving selection across the blocking prompt. */
-export function promptForLink(editor: Editor) {
-  const previousUrl = editor.getAttributes("link").href as string | undefined;
-  if (editor.isActive("link")) {
-    editor.chain().focus().unsetLink().run();
-    return;
-  }
-
-  const { from, to } = editor.state.selection;
-  const url = window.prompt("URL:", previousUrl ?? "https://");
-  if (!url) {
-    editor.chain().focus().run();
-    return;
-  }
-
-  editor
-    .chain()
-    .focus()
-    .setTextSelection({ from, to })
-    .setLink({ href: url })
-    .run();
+export function bubbleMenuPaperSx(theme: Theme): SxProps<Theme> {
+  return {
+    display: "flex",
+    alignItems: "center",
+    flexWrap: "wrap",
+    gap: 0.25,
+    px: 0.5,
+    py: 0.25,
+    borderRadius: `${theme.shape.borderRadius}px`,
+    bgcolor: theme.palette.background.paper,
+    border: `1px solid ${theme.palette.divider}`,
+    maxWidth: "calc(100vw - 24px)",
+  };
 }

@@ -19,6 +19,7 @@ import MergeTypeIcon from "@mui/icons-material/MergeType";
 import CallSplitIcon from "@mui/icons-material/CallSplit";
 import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
+import { useAnchorPosition } from "./hooks";
 
 interface TableMenuProps {
   editor: Editor;
@@ -69,13 +70,13 @@ const GridPicker: React.FC<{
 };
 
 export const TableMenu: React.FC<TableMenuProps> = ({ editor, theme }) => {
-  const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const { open: openPopover, close: closePopover, popoverProps } = useAnchorPosition();
   const isInTable = editor.isActive("table");
   const accent = theme.palette.secondary.main;
 
   const insertTable = (rows: number, cols: number) => {
     editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
-    setAnchorEl(null);
+    closePopover();
   };
 
   const TableOpBtn: React.FC<{
@@ -108,7 +109,10 @@ export const TableMenu: React.FC<TableMenuProps> = ({ editor, theme }) => {
         <span>
           <IconButton
             size="small"
-            onMouseDown={(e) => { e.preventDefault(); setAnchorEl(e.currentTarget); }}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              openPopover(e.currentTarget);
+            }}
             style={{
               color: isInTable ? accent : theme.palette.text.secondary,
               backgroundColor: isInTable ? alpha(accent, 0.12) : "transparent",
@@ -130,12 +134,8 @@ export const TableMenu: React.FC<TableMenuProps> = ({ editor, theme }) => {
       </Tooltip>
 
       <Popover
-        open={Boolean(anchorEl)}
-        anchorEl={anchorEl}
-        onClose={() => setAnchorEl(null)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-        transformOrigin={{ vertical: "top", horizontal: "left" }}
-        slotProps={{ paper: { sx: { p: 0.5 } } }}
+        {...popoverProps}
+        slotProps={{ paper: { sx: { p: 0.5, maxWidth: "calc(100vw - 24px)" } } }}
       >
         {!isInTable ? (
           <GridPicker theme={theme} onSelect={insertTable} />
@@ -146,13 +146,13 @@ export const TableMenu: React.FC<TableMenuProps> = ({ editor, theme }) => {
             </Typography>
 
             <Box sx={{ display: "flex", gap: 0.25 }}>
-              <TableOpBtn label="Add column before" onClick={() => { editor.chain().focus().addColumnBefore().run(); setAnchorEl(null); }}>
+              <TableOpBtn label="Add column before" onClick={() => { editor.chain().focus().addColumnBefore().run(); closePopover(); }}>
                 <ViewColumnIcon fontSize="small" />
               </TableOpBtn>
-              <TableOpBtn label="Add column after" onClick={() => { editor.chain().focus().addColumnAfter().run(); setAnchorEl(null); }}>
+              <TableOpBtn label="Add column after" onClick={() => { editor.chain().focus().addColumnAfter().run(); closePopover(); }}>
                 <AddIcon fontSize="small" />
               </TableOpBtn>
-              <TableOpBtn label="Delete column" onClick={() => { editor.chain().focus().deleteColumn().run(); setAnchorEl(null); }}>
+              <TableOpBtn label="Delete column" onClick={() => { editor.chain().focus().deleteColumn().run(); closePopover(); }}>
                 <RemoveIcon fontSize="small" />
               </TableOpBtn>
             </Box>
@@ -160,13 +160,13 @@ export const TableMenu: React.FC<TableMenuProps> = ({ editor, theme }) => {
             <Divider />
 
             <Box sx={{ display: "flex", gap: 0.25 }}>
-              <TableOpBtn label="Add row before" onClick={() => { editor.chain().focus().addRowBefore().run(); setAnchorEl(null); }}>
+              <TableOpBtn label="Add row before" onClick={() => { editor.chain().focus().addRowBefore().run(); closePopover(); }}>
                 <TableRowsIcon fontSize="small" />
               </TableOpBtn>
-              <TableOpBtn label="Add row after" onClick={() => { editor.chain().focus().addRowAfter().run(); setAnchorEl(null); }}>
+              <TableOpBtn label="Add row after" onClick={() => { editor.chain().focus().addRowAfter().run(); closePopover(); }}>
                 <AddIcon fontSize="small" />
               </TableOpBtn>
-              <TableOpBtn label="Delete row" onClick={() => { editor.chain().focus().deleteRow().run(); setAnchorEl(null); }}>
+              <TableOpBtn label="Delete row" onClick={() => { editor.chain().focus().deleteRow().run(); closePopover(); }}>
                 <RemoveIcon fontSize="small" />
               </TableOpBtn>
             </Box>
@@ -174,13 +174,13 @@ export const TableMenu: React.FC<TableMenuProps> = ({ editor, theme }) => {
             <Divider />
 
             <Box sx={{ display: "flex", gap: 0.25 }}>
-              <TableOpBtn label="Merge cells" onClick={() => { editor.chain().focus().mergeCells().run(); setAnchorEl(null); }}>
+              <TableOpBtn label="Merge cells" onClick={() => { editor.chain().focus().mergeCells().run(); closePopover(); }}>
                 <MergeTypeIcon fontSize="small" />
               </TableOpBtn>
-              <TableOpBtn label="Split cell" onClick={() => { editor.chain().focus().splitCell().run(); setAnchorEl(null); }}>
+              <TableOpBtn label="Split cell" onClick={() => { editor.chain().focus().splitCell().run(); closePopover(); }}>
                 <CallSplitIcon fontSize="small" />
               </TableOpBtn>
-              <TableOpBtn label="Delete table" onClick={() => { editor.chain().focus().deleteTable().run(); setAnchorEl(null); }}>
+              <TableOpBtn label="Delete table" onClick={() => { editor.chain().focus().deleteTable().run(); closePopover(); }}>
                 <DeleteOutlineIcon fontSize="small" sx={{ color: theme.palette.error.main }} />
               </TableOpBtn>
             </Box>
