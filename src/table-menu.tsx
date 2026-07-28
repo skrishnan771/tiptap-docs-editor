@@ -14,7 +14,7 @@ import { alpha } from "@mui/material/styles";
 import TableChartIcon from "@mui/icons-material/TableChart";
 import ViewColumnIcon from "@mui/icons-material/ViewColumn";
 import TableRowsIcon from "@mui/icons-material/TableRows";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import MergeTypeIcon from "@mui/icons-material/MergeType";
 import CallSplitIcon from "@mui/icons-material/CallSplit";
 import AddIcon from "@mui/icons-material/Add";

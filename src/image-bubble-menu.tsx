@@ -12,7 +12,7 @@ import FormatAlignRightIcon from "@mui/icons-material/FormatAlignRight";
 import WidthFullIcon from "@mui/icons-material/WidthFull";
 import PhotoSizeSelectSmallIcon from "@mui/icons-material/PhotoSizeSelectSmall";
 import PhotoSizeSelectLargeIcon from "@mui/icons-material/PhotoSizeSelectLarge";
-import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutlined";
 import { TBtn } from "./toolbar-button";
 import { bubbleMenuPaperSx } from "./utils";
 

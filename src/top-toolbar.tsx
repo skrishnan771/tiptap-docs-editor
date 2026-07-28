@@ -104,8 +104,8 @@ export const TopToolbar: React.FC<{
       {/* Font controls (desktop only) */}
       {!isMobile && cfg.fontControls && (
         <>
-          <FontFamilySelect editor={editor} theme={theme} />
-          <FontSizeSelect editor={editor} theme={theme} />
+          <FontFamilySelect editor={editor} />
+          <FontSizeSelect editor={editor} />
           {sep}
         </>
       )}
