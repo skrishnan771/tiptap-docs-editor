@@ -2,7 +2,7 @@
 
 import React from "react";
 import type { Editor } from "@tiptap/react";
-import type { Theme } from "@mui/material/styles";
+import type { SxProps, Theme } from "@mui/material/styles";
 import { alpha } from "@mui/material/styles";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
@@ -17,6 +17,7 @@ export type ToolbarAction =
   | "link" | "image"
   | "superscript" | "subscript"
   | "clearFormatting"
+  | "table"
   | "insertTable" | "addColumnAfter" | "addColumnBefore" | "deleteColumn"
   | "addRowAfter" | "addRowBefore" | "deleteRow" | "deleteTable" | "mergeCells" | "splitCell"
   | "custom";
@@ -48,7 +49,7 @@ function dispatchAction(editor: Editor, action: ToolbarAction) {
     case "superscript": c.toggleSuperscript().run(); break;
     case "subscript": c.toggleSubscript().run(); break;
     case "clearFormatting": c.unsetAllMarks().run(); break;
-    case "insertTable": editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(); break;
+    case "insertTable": c.insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(); break;
     case "addColumnAfter": c.addColumnAfter().run(); break;
     case "addColumnBefore": c.addColumnBefore().run(); break;
     case "deleteColumn": c.deleteColumn().run(); break;
@@ -83,13 +84,12 @@ export function isActive(editor: Editor, action: ToolbarAction): boolean {
     case "alignRight": return editor.isActive({ textAlign: "right" });
     case "alignJustify": return editor.isActive({ textAlign: "justify" });
     case "link": return editor.isActive("link");
+    case "table": return editor.isActive("table");
     case "superscript": return editor.isActive("superscript");
     case "subscript": return editor.isActive("subscript");
     default: return false;
   }
 }
-
-import type { SxProps } from "@mui/material/styles";
 
 export const TBtn: React.FC<{
   label: string;
@@ -97,7 +97,8 @@ export const TBtn: React.FC<{
   editor: Editor;
   theme: Theme;
   disabled?: boolean;
-  onCustomAction?: (e?: React.MouseEvent<HTMLButtonElement>) => void;
+  /** When provided, replaces the built-in `action` dispatch entirely. */
+  onCustomAction?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   sx?: SxProps<Theme>;
   children: React.ReactNode;
 }> = ({ label, action, editor, theme, disabled = false, onCustomAction, sx: extraSx, children }) => {
@@ -113,20 +114,17 @@ export const TBtn: React.FC<{
           data-action={action}
           onMouseDown={(e) => {
             e.preventDefault();
-            const act = e.currentTarget.dataset.action as ToolbarAction;
-            if (onCustomAction && (act === "custom" || act === "link" || act === "image")) {
+            if (onCustomAction) {
               onCustomAction(e);
             } else {
-              dispatchAction(editor, act);
+              dispatchAction(editor, action);
             }
-          }}
-          style={{
-            color: active ? accent : theme.palette.text.secondary,
-            backgroundColor: active ? alpha(accent, 0.12) : "transparent",
           }}
           sx={[
             {
               borderRadius: `${theme.shape.borderRadius}px`,
+              color: active ? accent : theme.palette.text.secondary,
+              bgcolor: active ? alpha(accent, 0.12) : "transparent",
               transition: theme.transitions.create(
                 ["background-color", "color"],
                 { duration: theme.transitions.duration.shorter }
@@ -153,7 +151,7 @@ export const HBtn: React.FC<{
 }> = ({ level, editor, theme }) => (
   <TBtn
     label={`Heading ${level}`}
-    action={`h${level}` as ToolbarAction}
+    action={`h${level}`}
     editor={editor}
     theme={theme}
     sx={{

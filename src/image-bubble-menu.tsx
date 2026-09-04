@@ -21,21 +21,25 @@ interface ImageBubbleMenuProps {
   theme: Theme;
 }
 
+const ALIGN_STYLES = {
+  left: "margin-right: auto; margin-left: 0;",
+  center: "margin-left: auto; margin-right: auto;",
+  right: "margin-left: auto; margin-right: 0;",
+} as const;
+
+type ImageAlign = keyof typeof ALIGN_STYLES;
+
 export const ImageBubbleMenu: React.FC<ImageBubbleMenuProps> = ({ editor, theme }) => {
   const setImageSize = (width: string) => {
     editor.chain().focus().updateAttributes("image", { width }).run();
   };
 
-  const setImageAlign = (style: string) => {
-    const attrs: Record<string, string> = {};
-    if (style === "left") {
-      attrs.style = "margin-right: auto; margin-left: 0;";
-    } else if (style === "center") {
-      attrs.style = "margin-left: auto; margin-right: auto;";
-    } else if (style === "right") {
-      attrs.style = "margin-left: auto; margin-right: 0;";
-    }
-    editor.chain().focus().updateAttributes("image", attrs).run();
+  const setImageAlign = (align: ImageAlign) => {
+    editor
+      .chain()
+      .focus()
+      .updateAttributes("image", { style: ALIGN_STYLES[align] })
+      .run();
   };
 
   return (

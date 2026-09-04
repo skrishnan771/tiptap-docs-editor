@@ -54,6 +54,10 @@ const DEFAULT_TOOLBAR: Required<ToolbarConfig> = {
   print: true,
 };
 
+const sep = (
+  <Divider orientation="vertical" flexItem sx={{ mx: 0.5, alignSelf: "center", height: 20 }} />
+);
+
 export const TopToolbar: React.FC<{
   editor: Editor;
   theme: Theme;
@@ -64,10 +68,6 @@ export const TopToolbar: React.FC<{
 
   const cfg = { ...DEFAULT_TOOLBAR, ...toolbarConfig };
   const isMobile = !useMediaQuery(theme.breakpoints.up("sm"));
-
-  const sep = (
-    <Divider orientation="vertical" flexItem sx={{ mx: 0.5, alignSelf: "center", height: 20 }} />
-  );
 
   /* ── Toolbar container ────────────────────────────────────── */
 
@@ -125,12 +125,6 @@ export const TopToolbar: React.FC<{
           <TBtn label="Strikethrough" action="strike" editor={editor} theme={theme}>
             <StrikethroughSIcon fontSize="small" />
           </TBtn>
-        </>
-      )}
-
-      {/* Extended formatting */}
-      {cfg.formatting && (
-        <>
           <TBtn label="Inline Code" action="code" editor={editor} theme={theme}>
             <CodeIcon fontSize="small" />
           </TBtn>

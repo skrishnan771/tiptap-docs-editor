@@ -1,5 +1,4 @@
 import type { AnyExtension } from "@tiptap/core";
-import { mergeAttributes } from "@tiptap/core";
 import type { Theme } from "@mui/material/styles";
 
 import StarterKit from "@tiptap/starter-kit";
@@ -29,6 +28,12 @@ import { SlashCommands } from "./slash-menu";
 import type { CustomSlashItem } from "./types";
 
 /**
+ * Registering the ~35 `common` grammars is expensive and the registry is
+ * stateless, so it is built once per module rather than per editor.
+ */
+const lowlight = createLowlight(common);
+
+/**
  * Custom Image extension that supports inline `style` attribute for alignment.
  */
 export const CustomImage = Image.extend({
@@ -44,9 +49,6 @@ export const CustomImage = Image.extend({
         },
       },
     };
-  },
-  renderHTML({ HTMLAttributes }) {
-    return ["img", mergeAttributes(this.options.HTMLAttributes, HTMLAttributes)];
   },
 });
 
@@ -82,8 +84,6 @@ export function getDefaultExtensions(
     slashMenuItems,
   } = options;
 
-  const lowlight = createLowlight(common);
-
   return [
     StarterKit.configure({
       codeBlock: false,
@@ -117,10 +117,7 @@ export function getDefaultExtensions(
     Youtube.configure({ inline: false, ccLanguage: "en" }),
     CharacterCount,
     SlashCommands.configure({
-      suggestion: {
-        ...(SlashCommands.options?.suggestion ?? {}),
-        ...(slashMenuItems ? { customItems: slashMenuItems } : {}),
-      },
+      suggestion: slashMenuItems ? { customItems: slashMenuItems } : {},
     }),
     Emoji.configure({
       emojis: gitHubEmojis,

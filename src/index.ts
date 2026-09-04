@@ -8,3 +8,4 @@ export type {
 } from "./types";
 export type { ToolbarAction } from "./toolbar-button";
 export { SlashCommands } from "./slash-menu";
+export type { SlashCommandsOptions } from "./slash-menu";

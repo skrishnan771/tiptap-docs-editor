@@ -9,7 +9,7 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Extension, type Editor, type Range } from "@tiptap/core";
+import { Extension } from "@tiptap/core";
 import { ReactRenderer } from "@tiptap/react";
 import Suggestion, { type SuggestionOptions, type SuggestionProps } from "@tiptap/suggestion";
 
@@ -33,14 +33,10 @@ import TableChartIcon from "@mui/icons-material/TableChart";
 import YouTubeIcon from "@mui/icons-material/YouTube";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import type { CustomSlashItem } from "./types";
+import { insertImageFromFile } from "./utils";
 
-interface SlashItem {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  category?: string;
-  command: (props: { editor: Editor; range: Range }) => void;
-}
+type SlashItem = CustomSlashItem;
 
 const SLASH_ITEMS: SlashItem[] = [
   {
@@ -175,14 +171,7 @@ const SLASH_ITEMS: SlashItem[] = [
       input.accept = "image/*";
       input.onchange = () => {
         const file = input.files?.[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-          if (typeof reader.result === "string") {
-            editor.chain().focus().setImage({ src: reader.result }).run();
-          }
-        };
-        reader.readAsDataURL(file);
+        if (file) insertImageFromFile(editor, file);
       };
       input.click();
     },
@@ -244,6 +233,7 @@ const SlashMenuComponent = forwardRef<
 
   useImperativeHandle(ref, () => ({
     onKeyDown: ({ event }) => {
+      if (items.length === 0) return false;
       if (event.key === "ArrowUp") {
         setSelectedIndex((i) => (i + items.length - 1) % items.length);
         return true;
@@ -269,16 +259,17 @@ const SlashMenuComponent = forwardRef<
 
   if (items.length === 0) return null;
 
-  // Group items by category for display
+  // Group consecutive items sharing a category, keeping the flat index for
+  // keyboard selection.
   const grouped: { category: string; items: { item: SlashItem; globalIndex: number }[] }[] = [];
-  let lastCat = "";
   items.forEach((item, index) => {
-    const cat = item.category ?? "";
-    if (cat !== lastCat) {
-      grouped.push({ category: cat, items: [] });
-      lastCat = cat;
+    const category = item.category ?? "";
+    let group = grouped[grouped.length - 1];
+    if (!group || group.category !== category) {
+      group = { category, items: [] };
+      grouped.push(group);
     }
-    grouped[grouped.length - 1]!.items.push({ item, globalIndex: index });
+    group.items.push({ item, globalIndex: index });
   });
 
   return (
@@ -327,10 +318,9 @@ const SlashMenuComponent = forwardRef<
                 <ListItemText
                   primary={item.title}
                   secondary={item.description}
-                  primaryTypographyProps={{ variant: "body2", fontWeight: 500 }}
-                  secondaryTypographyProps={{
-                    variant: "caption",
-                    color: "text.disabled",
+                  slotProps={{
+                    primary: { variant: "body2", fontWeight: 500 },
+                    secondary: { variant: "caption", color: "text.disabled" },
                   }}
                 />
               </ListItemButton>
@@ -351,22 +341,40 @@ const SlashMenuComponent = forwardRef<
 
 SlashMenuComponent.displayName = "SlashMenuComponent";
 
-const suggestionConfig: Omit<SuggestionOptions<SlashItem>, "editor"> = {
+export interface SlashCommandsOptions {
+  suggestion: Omit<SuggestionOptions<SlashItem>, "editor"> & {
+    /** Extra items appended to the built-in ones. */
+    customItems?: SlashItem[];
+  };
+}
+
+function filterSlashItems(items: SlashItem[], query: string): SlashItem[] {
+  const q = query.toLowerCase();
+  return items.filter(
+    (item) =>
+      item.title.toLowerCase().includes(q) ||
+      item.description.toLowerCase().includes(q)
+  );
+}
+
+const suggestionConfig: SlashCommandsOptions["suggestion"] = {
   char: "/",
-  items: ({ query }) => {
-    const q = query.toLowerCase();
-    return SLASH_ITEMS.filter(
-      (item) =>
-        item.title.toLowerCase().includes(q) ||
-        item.description.toLowerCase().includes(q)
-    );
-  },
   command: ({ editor, range, props: item }) => {
     item.command({ editor, range });
   },
   render: () => {
     let component: ReactRenderer<SlashMenuRef> | null = null;
     let popup: HTMLDivElement | null = null;
+
+    // Escape tears the menu down while the suggestion plugin stays active, so
+    // the handles have to be cleared or a later onUpdate/onExit would touch a
+    // destroyed renderer.
+    const teardown = () => {
+      popup?.remove();
+      component?.destroy();
+      popup = null;
+      component = null;
+    };
 
     return {
       onStart: (props) => {
@@ -385,23 +393,20 @@ const suggestionConfig: Omit<SuggestionOptions<SlashItem>, "editor"> = {
       },
 
       onUpdate: (props) => {
-        component?.updateProps(props);
-        if (popup) updatePosition(props, popup);
+        if (!component || !popup) return;
+        component.updateProps(props);
+        updatePosition(props, popup);
       },
 
       onKeyDown: (props) => {
         if (props.event.key === "Escape") {
-          popup?.remove();
-          component?.destroy();
+          teardown();
           return true;
         }
         return component?.ref?.onKeyDown(props) ?? false;
       },
 
-      onExit: () => {
-        popup?.remove();
-        component?.destroy();
-      },
+      onExit: teardown,
     };
   },
 };
@@ -423,7 +428,7 @@ function updatePosition(
   popup.style.top = `${rect.bottom + window.scrollY + 4}px`;
 }
 
-export const SlashCommands = Extension.create({
+export const SlashCommands = Extension.create<SlashCommandsOptions>({
   name: "slashCommands",
 
   addOptions() {
@@ -431,10 +436,16 @@ export const SlashCommands = Extension.create({
   },
 
   addProseMirrorPlugins() {
+    const { customItems, items, ...suggestion } = this.options.suggestion;
+    const allItems = customItems?.length
+      ? [...SLASH_ITEMS, ...customItems]
+      : SLASH_ITEMS;
+
     return [
       Suggestion({
         editor: this.editor,
-        ...this.options.suggestion,
+        ...suggestion,
+        items: items ?? (({ query }) => filterSlashItems(allItems, query)),
       }),
     ];
   },

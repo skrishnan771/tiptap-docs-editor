@@ -33,10 +33,8 @@ export function useEditorState(editor: Editor | null): number {
     if (!editor) return;
     const bump = () => setTick((n) => n + 1);
     editor.on("transaction", bump);
-    editor.on("selectionUpdate", bump);
     return () => {
       editor.off("transaction", bump);
-      editor.off("selectionUpdate", bump);
     };
   }, [editor]);
 
@@ -44,6 +42,12 @@ export function useEditorState(editor: Editor | null): number {
 }
 
 const STYLE_ID = "tiptap-editor-styles";
+
+/**
+ * The style tag is a document-level singleton shared by every mounted editor,
+ * so it may only be removed once the last one unmounts.
+ */
+let styleRefCount = 0;
 
 export function useEditorStyles(theme: Theme) {
   useEffect(() => {
@@ -53,6 +57,7 @@ export function useEditorStyles(theme: Theme) {
       el.id = STYLE_ID;
       document.head.appendChild(el);
     }
+    styleRefCount += 1;
 
     const br = Number(theme.shape.borderRadius);
     const isDark = theme.palette.mode === "dark";
@@ -413,7 +418,11 @@ export function useEditorStyles(theme: Theme) {
     `;
 
     return () => {
-      el?.remove();
+      styleRefCount -= 1;
+      if (styleRefCount <= 0) {
+        styleRefCount = 0;
+        el?.remove();
+      }
     };
   }, [theme]);
 }

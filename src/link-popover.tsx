@@ -7,14 +7,11 @@ import Box from "@mui/material/Box";
 import Popover from "@mui/material/Popover";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
-import IconButton from "@mui/material/IconButton";
-import Tooltip from "@mui/material/Tooltip";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import Checkbox from "@mui/material/Checkbox";
 import LinkIcon from "@mui/icons-material/Link";
 import LinkOffIcon from "@mui/icons-material/LinkOff";
-import { alpha } from "@mui/material/styles";
-import { isActive } from "./toolbar-button";
+import { TBtn, isActive } from "./toolbar-button";
 import { useAnchorPosition } from "./hooks";
 
 interface LinkPopoverProps {
@@ -33,27 +30,26 @@ export const LinkPopoverButton: React.FC<LinkPopoverProps> = ({
   const [openInNewTab, setOpenInNewTab] = useState(true);
 
   const active = isActive(editor, "link");
-  const accent = theme.palette.secondary.main;
 
   const open = useCallback(
     (el: HTMLElement) => {
-      const existing = editor.getAttributes("link").href as string | undefined;
-      const target = editor.getAttributes("link").target as string | undefined;
-      setUrl(existing ?? "https://");
-      setOpenInNewTab(target === "_blank");
+      const attrs = editor.getAttributes("link");
+      setUrl((attrs.href as string | undefined) ?? "https://");
+      setOpenInNewTab(attrs.target === "_blank");
       openPopover(el);
     },
     [editor, openPopover]
   );
 
   const applyLink = useCallback(() => {
-    if (!url) {
+    const href = url.trim();
+    if (!href) {
       editor.chain().focus().unsetLink().run();
     } else {
       editor
         .chain()
         .focus()
-        .setLink({ href: url, target: openInNewTab ? "_blank" : null })
+        .setLink({ href, target: openInNewTab ? "_blank" : null })
         .run();
     }
     closePopover();
@@ -66,41 +62,25 @@ export const LinkPopoverButton: React.FC<LinkPopoverProps> = ({
 
   return (
     <>
-      <Tooltip title="Link" arrow placement="top">
-        <span>
-          <IconButton
-            size="small"
-            onMouseDown={(e) => {
-              e.preventDefault();
-              if (active) {
-                removeLink();
-              } else {
-                open(e.currentTarget);
-              }
-            }}
-            style={{
-              color: active ? accent : theme.palette.text.secondary,
-              backgroundColor: active ? alpha(accent, 0.12) : "transparent",
-            }}
-            sx={{
-              borderRadius: `${theme.shape.borderRadius}px`,
-              transition: theme.transitions.create(["background-color", "color"], {
-                duration: theme.transitions.duration.shorter,
-              }),
-              "&:hover": {
-                bgcolor: active ? alpha(accent, 0.2) : theme.palette.action.hover,
-                color: active ? accent : theme.palette.text.primary,
-              },
-            }}
-          >
-            {active ? (
-              <LinkOffIcon sx={{ fontSize: iconSize }} />
-            ) : (
-              <LinkIcon sx={{ fontSize: iconSize }} />
-            )}
-          </IconButton>
-        </span>
-      </Tooltip>
+      <TBtn
+        label="Link"
+        action="link"
+        editor={editor}
+        theme={theme}
+        onCustomAction={(e) => {
+          if (active) {
+            removeLink();
+          } else {
+            open(e.currentTarget);
+          }
+        }}
+      >
+        {active ? (
+          <LinkOffIcon sx={{ fontSize: iconSize }} />
+        ) : (
+          <LinkIcon sx={{ fontSize: iconSize }} />
+        )}
+      </TBtn>
 
       <Popover
         {...popoverProps}
