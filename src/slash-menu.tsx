@@ -9,16 +9,21 @@ import React, {
   useRef,
   useState,
 } from "react";
-import { Extension, type Editor, type Range } from "@tiptap/core";
+import { Extension } from "@tiptap/core";
 import { ReactRenderer } from "@tiptap/react";
-import Suggestion, { type SuggestionOptions, type SuggestionProps } from "@tiptap/suggestion";
+import Suggestion, {
+  type SuggestionOptions,
+  type SuggestionProps,
+} from "@tiptap/suggestion";
 
 import Paper from "@mui/material/Paper";
+import Box from "@mui/material/Box";
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
+import { alpha } from "@mui/material/styles";
 
 import TextFieldsIcon from "@mui/icons-material/TextFields";
 import TitleIcon from "@mui/icons-material/Title";
@@ -33,14 +38,11 @@ import TableChartIcon from "@mui/icons-material/TableChart";
 import YouTubeIcon from "@mui/icons-material/YouTube";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import ArrowRightIcon from "@mui/icons-material/ArrowRight";
+import type { CustomSlashItem } from "./types";
+import { floatingPaperSx, insertImageFromFile } from "./utils";
 
-interface SlashItem {
-  title: string;
-  description: string;
-  icon: React.ReactNode;
-  category?: string;
-  command: (props: { editor: Editor; range: Range }) => void;
-}
+type SlashItem = CustomSlashItem;
 
 const SLASH_ITEMS: SlashItem[] = [
   {
@@ -104,6 +106,15 @@ const SLASH_ITEMS: SlashItem[] = [
     icon: <ChecklistIcon fontSize="small" />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleTaskList().run();
+    },
+  },
+  {
+    title: "Toggle List",
+    description: "Collapsible content block",
+    category: "Lists",
+    icon: <ArrowRightIcon fontSize="small" />,
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).setDetails().run();
     },
   },
   {
@@ -175,14 +186,7 @@ const SLASH_ITEMS: SlashItem[] = [
       input.accept = "image/*";
       input.onchange = () => {
         const file = input.files?.[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = () => {
-          if (typeof reader.result === "string") {
-            editor.chain().focus().setImage({ src: reader.result }).run();
-          }
-        };
-        reader.readAsDataURL(file);
+        if (file) insertImageFromFile(editor, file);
       };
       input.click();
     },
@@ -216,157 +220,224 @@ const SLASH_ITEMS: SlashItem[] = [
   },
 ];
 
+/** Kept in sync with the positioner's clipping maths below. */
+const MENU_WIDTH = 320;
+
 interface SlashMenuRef {
   onKeyDown: (props: { event: KeyboardEvent }) => boolean;
 }
 
-const SlashMenuComponent = forwardRef<
-  SlashMenuRef,
-  SuggestionProps<SlashItem>
->((props, ref) => {
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const listRef = useRef<HTMLUListElement>(null);
-  const items = props.items;
+const SlashMenuComponent = forwardRef<SlashMenuRef, SuggestionProps<SlashItem>>(
+  (props, ref) => {
+    const [selectedIndex, setSelectedIndex] = useState(0);
+    const listRef = useRef<HTMLUListElement>(null);
+    const items = props.items;
 
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [items]);
+    useEffect(() => {
+      setSelectedIndex(0);
+    }, [items]);
 
-  const selectItem = useCallback(
-    (index: number) => {
-      const item = items[index];
-      if (item) {
-        props.command(item);
+    const selectItem = useCallback(
+      (index: number) => {
+        const item = items[index];
+        if (item) {
+          props.command(item);
+        }
+      },
+      [items, props],
+    );
+
+    useImperativeHandle(ref, () => ({
+      onKeyDown: ({ event }) => {
+        if (items.length === 0) return false;
+        if (event.key === "ArrowUp") {
+          setSelectedIndex((i) => (i + items.length - 1) % items.length);
+          return true;
+        }
+        if (event.key === "ArrowDown") {
+          setSelectedIndex((i) => (i + 1) % items.length);
+          return true;
+        }
+        if (event.key === "Enter") {
+          selectItem(selectedIndex);
+          return true;
+        }
+        return false;
+      },
+    }));
+
+    useLayoutEffect(() => {
+      const el = listRef.current?.children[selectedIndex] as
+        HTMLElement | undefined;
+      el?.scrollIntoView({ block: "nearest" });
+    }, [selectedIndex]);
+
+    if (items.length === 0) return null;
+
+    // Group consecutive items sharing a category, keeping the flat index for
+    // keyboard selection.
+    const grouped: {
+      category: string;
+      items: { item: SlashItem; globalIndex: number }[];
+    }[] = [];
+    items.forEach((item, index) => {
+      const category = item.category ?? "";
+      let group = grouped[grouped.length - 1];
+      if (!group || group.category !== category) {
+        group = { category, items: [] };
+        grouped.push(group);
       }
-    },
-    [items, props]
-  );
+      group.items.push({ item, globalIndex: index });
+    });
 
-  useImperativeHandle(ref, () => ({
-    onKeyDown: ({ event }) => {
-      if (event.key === "ArrowUp") {
-        setSelectedIndex((i) => (i + items.length - 1) % items.length);
-        return true;
-      }
-      if (event.key === "ArrowDown") {
-        setSelectedIndex((i) => (i + 1) % items.length);
-        return true;
-      }
-      if (event.key === "Enter") {
-        selectItem(selectedIndex);
-        return true;
-      }
-      return false;
-    },
-  }));
-
-  useLayoutEffect(() => {
-    const el = listRef.current?.children[selectedIndex] as
-      | HTMLElement
-      | undefined;
-    el?.scrollIntoView({ block: "nearest" });
-  }, [selectedIndex]);
-
-  if (items.length === 0) return null;
-
-  // Group items by category for display
-  const grouped: { category: string; items: { item: SlashItem; globalIndex: number }[] }[] = [];
-  let lastCat = "";
-  items.forEach((item, index) => {
-    const cat = item.category ?? "";
-    if (cat !== lastCat) {
-      grouped.push({ category: cat, items: [] });
-      lastCat = cat;
-    }
-    grouped[grouped.length - 1]!.items.push({ item, globalIndex: index });
-  });
-
-  return (
-    <Paper
-      elevation={8}
-      sx={{
-        width: 300,
-        maxWidth: "calc(100vw - 24px)",
-        maxHeight: 380,
-        overflowY: "auto",
-        py: 0.5,
-        borderRadius: 2,
-      }}
-    >
-      <List dense disablePadding ref={listRef}>
-        {grouped.map((group) => (
-          <React.Fragment key={group.category || "_none"}>
-            {group.category && (
-              <Typography
-                variant="caption"
-                color="text.disabled"
-                sx={{
-                  display: "block",
-                  px: 1.5,
-                  pt: 1,
-                  pb: 0.25,
-                  fontWeight: 600,
-                  textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  fontSize: "0.65rem",
-                }}
-              >
-                {group.category}
-              </Typography>
-            )}
-            {group.items.map(({ item, globalIndex }) => (
-              <ListItemButton
-                key={item.title}
-                selected={globalIndex === selectedIndex}
-                onClick={() => selectItem(globalIndex)}
-                sx={{ px: 1.5, py: 0.5, borderRadius: 1, mx: 0.5 }}
-              >
-                <ListItemIcon sx={{ minWidth: 32, color: "text.secondary" }}>
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText
-                  primary={item.title}
-                  secondary={item.description}
-                  primaryTypographyProps={{ variant: "body2", fontWeight: 500 }}
-                  secondaryTypographyProps={{
-                    variant: "caption",
-                    color: "text.disabled",
-                  }}
-                />
-              </ListItemButton>
-            ))}
-          </React.Fragment>
-        ))}
-      </List>
-      <Typography
-        variant="caption"
-        color="text.disabled"
-        sx={{ display: "block", textAlign: "center", py: 0.5 }}
+    return (
+      <Paper
+        elevation={0}
+        sx={(theme) => ({
+          ...floatingPaperSx(theme),
+          width: MENU_WIDTH,
+          maxHeight: 340,
+          overflowY: "auto",
+          overscrollBehavior: "contain",
+          py: 0.75,
+        })}
       >
-        Type to filter · ↑↓ navigate · Enter select
-      </Typography>
-    </Paper>
-  );
-});
+        <List dense disablePadding ref={listRef}>
+          {grouped.map((group) => (
+            <React.Fragment key={group.category || "_none"}>
+              {group.category && (
+                <Typography
+                  variant="caption"
+                  color="text.disabled"
+                  sx={{
+                    display: "block",
+                    px: 1.75,
+                    pt: 1,
+                    pb: 0.5,
+                    fontWeight: 500,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.06em",
+                    fontSize: "0.6875rem",
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {group.category}
+                </Typography>
+              )}
+              {group.items.map(({ item, globalIndex }) => (
+                <ListItemButton
+                  key={item.title}
+                  selected={globalIndex === selectedIndex}
+                  onClick={() => selectItem(globalIndex)}
+                  sx={(theme) => ({
+                    px: 1,
+                    py: 0.5,
+                    mx: 0.75,
+                    gap: 1.25,
+                    borderRadius: `${Math.min(Number(theme.shape.borderRadius), 4)}px`,
+                    "&.Mui-selected, &.Mui-selected:hover": {
+                      bgcolor: alpha(theme.palette.text.primary, 0.06),
+                    },
+                  })}
+                >
+                  {/* Notion previews each block type in a small bordered tile. */}
+                  <ListItemIcon
+                    sx={(theme) => ({
+                      minWidth: 0,
+                      width: 28,
+                      height: 28,
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      borderRadius: `${Math.min(Number(theme.shape.borderRadius), 4)}px`,
+                      border: `1px solid ${theme.palette.divider}`,
+                      color: theme.palette.text.secondary,
+                      "& .MuiSvgIcon-root": { fontSize: 17 },
+                    })}
+                  >
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText
+                    primary={item.title}
+                    secondary={item.description}
+                    sx={{ my: 0 }}
+                    slotProps={{
+                      primary: {
+                        variant: "body2",
+                        fontWeight: 500,
+                        noWrap: true,
+                        sx: { lineHeight: 1.35 },
+                      },
+                      secondary: {
+                        variant: "caption",
+                        color: "text.disabled",
+                        noWrap: true,
+                        sx: { display: "block", lineHeight: 1.3 },
+                      },
+                    }}
+                  />
+                </ListItemButton>
+              ))}
+            </React.Fragment>
+          ))}
+        </List>
+        <Box
+          sx={(theme) => ({
+            mt: 0.75,
+            pt: 0.75,
+            px: 1.75,
+            borderTop: `1px solid ${theme.palette.divider}`,
+          })}
+        >
+          <Typography
+            variant="caption"
+            color="text.disabled"
+            sx={{ display: "block", fontSize: "0.6875rem" }}
+          >
+            ↑↓ to navigate · ↵ to select · esc to dismiss
+          </Typography>
+        </Box>
+      </Paper>
+    );
+  },
+);
 
 SlashMenuComponent.displayName = "SlashMenuComponent";
 
-const suggestionConfig: Omit<SuggestionOptions<SlashItem>, "editor"> = {
+export interface SlashCommandsOptions {
+  suggestion: Omit<SuggestionOptions<SlashItem>, "editor"> & {
+    /** Extra items appended to the built-in ones. */
+    customItems?: SlashItem[];
+  };
+}
+
+function filterSlashItems(items: SlashItem[], query: string): SlashItem[] {
+  const q = query.toLowerCase();
+  return items.filter(
+    (item) =>
+      item.title.toLowerCase().includes(q) ||
+      item.description.toLowerCase().includes(q),
+  );
+}
+
+const suggestionConfig: SlashCommandsOptions["suggestion"] = {
   char: "/",
-  items: ({ query }) => {
-    const q = query.toLowerCase();
-    return SLASH_ITEMS.filter(
-      (item) =>
-        item.title.toLowerCase().includes(q) ||
-        item.description.toLowerCase().includes(q)
-    );
-  },
   command: ({ editor, range, props: item }) => {
     item.command({ editor, range });
   },
   render: () => {
     let component: ReactRenderer<SlashMenuRef> | null = null;
     let popup: HTMLDivElement | null = null;
+
+    // Escape tears the menu down while the suggestion plugin stays active, so
+    // the handles have to be cleared or a later onUpdate/onExit would touch a
+    // destroyed renderer.
+    const teardown = () => {
+      popup?.remove();
+      component?.destroy();
+      popup = null;
+      component = null;
+    };
 
     return {
       onStart: (props) => {
@@ -385,34 +456,31 @@ const suggestionConfig: Omit<SuggestionOptions<SlashItem>, "editor"> = {
       },
 
       onUpdate: (props) => {
-        component?.updateProps(props);
-        if (popup) updatePosition(props, popup);
+        if (!component || !popup) return;
+        component.updateProps(props);
+        updatePosition(props, popup);
       },
 
       onKeyDown: (props) => {
         if (props.event.key === "Escape") {
-          popup?.remove();
-          component?.destroy();
+          teardown();
           return true;
         }
         return component?.ref?.onKeyDown(props) ?? false;
       },
 
-      onExit: () => {
-        popup?.remove();
-        component?.destroy();
-      },
+      onExit: teardown,
     };
   },
 };
 
 function updatePosition(
   props: SuggestionProps<SlashItem>,
-  popup: HTMLDivElement
+  popup: HTMLDivElement,
 ) {
   const rect = props.clientRect?.();
   if (!rect) return;
-  const popupWidth = 300; // matches Paper width
+  const popupWidth = MENU_WIDTH;
   const margin = 12;
   let left = rect.left + window.scrollX;
   // Prevent clipping off the right edge on narrow screens
@@ -423,7 +491,7 @@ function updatePosition(
   popup.style.top = `${rect.bottom + window.scrollY + 4}px`;
 }
 
-export const SlashCommands = Extension.create({
+export const SlashCommands = Extension.create<SlashCommandsOptions>({
   name: "slashCommands",
 
   addOptions() {
@@ -431,10 +499,16 @@ export const SlashCommands = Extension.create({
   },
 
   addProseMirrorPlugins() {
+    const { customItems, items, ...suggestion } = this.options.suggestion;
+    const allItems = customItems?.length
+      ? [...SLASH_ITEMS, ...customItems]
+      : SLASH_ITEMS;
+
     return [
       Suggestion({
         editor: this.editor,
-        ...this.options.suggestion,
+        ...suggestion,
+        items: items ?? (({ query }) => filterSlashItems(allItems, query)),
       }),
     ];
   },

@@ -16,12 +16,26 @@ const FONT_FAMILIES = [
 
 const FONT_SIZES = ["12", "14", "16", "18", "20", "24", "28", "32", "36", "48"];
 
+const SELECT_SX = {
+  fontSize: "0.75rem",
+  height: 30,
+  "& .MuiSelect-select": { py: 0.25, px: 1 },
+};
+
+const ITEM_SX = { fontSize: "0.75rem" };
+
 interface FontControlsProps {
   editor: Editor;
 }
 
 export const FontFamilySelect: React.FC<FontControlsProps> = ({ editor }) => {
-  const current = (editor.getAttributes("textStyle").fontFamily as string) ?? "";
+  const current =
+    (editor.getAttributes("textStyle").fontFamily as string) ?? "";
+  // A document can carry a family we don't offer; listing it keeps the Select
+  // from rendering an out-of-range value.
+  const options = FONT_FAMILIES.some((f) => f.value === current)
+    ? FONT_FAMILIES
+    : [...FONT_FAMILIES, { label: "Custom", value: current }];
 
   return (
     <FormControl size="small" sx={{ minWidth: 100 }}>
@@ -36,14 +50,10 @@ export const FontFamilySelect: React.FC<FontControlsProps> = ({ editor }) => {
             editor.chain().focus().unsetFontFamily().run();
           }
         }}
-        sx={{
-          fontSize: "0.75rem",
-          height: 30,
-          "& .MuiSelect-select": { py: 0.25, px: 1 },
-        }}
+        sx={SELECT_SX}
       >
-        {FONT_FAMILIES.map((f) => (
-          <MenuItem key={f.value} value={f.value} sx={{ fontSize: "0.75rem" }}>
+        {options.map((f) => (
+          <MenuItem key={f.value} value={f.value} sx={ITEM_SX}>
             {f.label}
           </MenuItem>
         ))}
@@ -53,26 +63,24 @@ export const FontFamilySelect: React.FC<FontControlsProps> = ({ editor }) => {
 };
 
 export const FontSizeSelect: React.FC<FontControlsProps> = ({ editor }) => {
-  const currentAttrs = editor.getAttributes("textStyle");
-  const currentSize = (currentAttrs.fontSize as string) ?? "16";
-  const sizeNum = parseInt(currentSize, 10) || 16;
+  const currentSize =
+    (editor.getAttributes("textStyle").fontSize as string) ?? "16";
+  const current = String(parseInt(currentSize, 10) || 16);
+  const options = FONT_SIZES.includes(current)
+    ? FONT_SIZES
+    : [...FONT_SIZES, current].sort((a, b) => Number(a) - Number(b));
 
   return (
     <FormControl size="small" sx={{ minWidth: 60 }}>
       <Select
-        value={String(sizeNum)}
+        value={current}
         onChange={(e) => {
-          const size = e.target.value;
-          editor.chain().focus().setFontSize(`${size}px`).run();
+          editor.chain().focus().setFontSize(`${e.target.value}px`).run();
         }}
-        sx={{
-          fontSize: "0.75rem",
-          height: 30,
-          "& .MuiSelect-select": { py: 0.25, px: 1 },
-        }}
+        sx={SELECT_SX}
       >
-        {FONT_SIZES.map((s) => (
-          <MenuItem key={s} value={s} sx={{ fontSize: "0.75rem" }}>
+        {options.map((s) => (
+          <MenuItem key={s} value={s} sx={ITEM_SX}>
             {s}px
           </MenuItem>
         ))}

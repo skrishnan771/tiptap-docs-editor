@@ -21,50 +21,94 @@ interface ImageBubbleMenuProps {
   theme: Theme;
 }
 
-export const ImageBubbleMenu: React.FC<ImageBubbleMenuProps> = ({ editor, theme }) => {
+const ALIGN_STYLES = {
+  left: "margin-right: auto; margin-left: 0;",
+  center: "margin-left: auto; margin-right: auto;",
+  right: "margin-left: auto; margin-right: 0;",
+} as const;
+
+type ImageAlign = keyof typeof ALIGN_STYLES;
+
+export const ImageBubbleMenu: React.FC<ImageBubbleMenuProps> = ({
+  editor,
+  theme,
+}) => {
   const setImageSize = (width: string) => {
     editor.chain().focus().updateAttributes("image", { width }).run();
   };
 
-  const setImageAlign = (style: string) => {
-    const attrs: Record<string, string> = {};
-    if (style === "left") {
-      attrs.style = "margin-right: auto; margin-left: 0;";
-    } else if (style === "center") {
-      attrs.style = "margin-left: auto; margin-right: auto;";
-    } else if (style === "right") {
-      attrs.style = "margin-left: auto; margin-right: 0;";
-    }
-    editor.chain().focus().updateAttributes("image", attrs).run();
+  const setImageAlign = (align: ImageAlign) => {
+    editor
+      .chain()
+      .focus()
+      .updateAttributes("image", { style: ALIGN_STYLES[align] })
+      .run();
   };
 
   return (
     <BubbleMenu
       editor={editor}
+      className="tiptap-floating-menu"
       style={{ zIndex: 10 }}
       options={{ placement: "top", offset: { mainAxis: 8 } }}
       shouldShow={({ editor: e }) => e.isActive("image")}
     >
-      <Paper elevation={8} sx={{ ...bubbleMenuPaperSx(theme), px: 0.75 }}>
-        <TBtn label="Small (25%)" action="custom" editor={editor} theme={theme} onCustomAction={() => setImageSize("25%")}>
+      <Paper elevation={0} sx={{ ...bubbleMenuPaperSx(theme), px: 0.75 }}>
+        <TBtn
+          label="Small (25%)"
+          action="custom"
+          editor={editor}
+          theme={theme}
+          onCustomAction={() => setImageSize("25%")}
+        >
           <PhotoSizeSelectSmallIcon sx={{ fontSize: 16 }} />
         </TBtn>
-        <TBtn label="Medium (50%)" action="custom" editor={editor} theme={theme} onCustomAction={() => setImageSize("50%")}>
+        <TBtn
+          label="Medium (50%)"
+          action="custom"
+          editor={editor}
+          theme={theme}
+          onCustomAction={() => setImageSize("50%")}
+        >
           <PhotoSizeSelectLargeIcon sx={{ fontSize: 16 }} />
         </TBtn>
-        <TBtn label="Full width" action="custom" editor={editor} theme={theme} onCustomAction={() => setImageSize("100%")}>
+        <TBtn
+          label="Full width"
+          action="custom"
+          editor={editor}
+          theme={theme}
+          onCustomAction={() => setImageSize("100%")}
+        >
           <WidthFullIcon sx={{ fontSize: 16 }} />
         </TBtn>
 
         <Divider orientation="vertical" flexItem sx={{ mx: 0.25, my: 0.5 }} />
 
-        <TBtn label="Align left" action="custom" editor={editor} theme={theme} onCustomAction={() => setImageAlign("left")}>
+        <TBtn
+          label="Align left"
+          action="custom"
+          editor={editor}
+          theme={theme}
+          onCustomAction={() => setImageAlign("left")}
+        >
           <FormatAlignLeftIcon sx={{ fontSize: 16 }} />
         </TBtn>
-        <TBtn label="Align center" action="custom" editor={editor} theme={theme} onCustomAction={() => setImageAlign("center")}>
+        <TBtn
+          label="Align center"
+          action="custom"
+          editor={editor}
+          theme={theme}
+          onCustomAction={() => setImageAlign("center")}
+        >
           <FormatAlignCenterIcon sx={{ fontSize: 16 }} />
         </TBtn>
-        <TBtn label="Align right" action="custom" editor={editor} theme={theme} onCustomAction={() => setImageAlign("right")}>
+        <TBtn
+          label="Align right"
+          action="custom"
+          editor={editor}
+          theme={theme}
+          onCustomAction={() => setImageAlign("right")}
+        >
           <FormatAlignRightIcon sx={{ fontSize: 16 }} />
         </TBtn>
 
@@ -77,7 +121,9 @@ export const ImageBubbleMenu: React.FC<ImageBubbleMenuProps> = ({ editor, theme 
           theme={theme}
           onCustomAction={() => editor.chain().focus().deleteSelection().run()}
         >
-          <DeleteOutlineIcon sx={{ fontSize: 16, color: theme.palette.error.main }} />
+          <DeleteOutlineIcon
+            sx={{ fontSize: 16, color: theme.palette.error.main }}
+          />
         </TBtn>
       </Paper>
     </BubbleMenu>
