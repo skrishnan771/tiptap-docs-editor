@@ -14,11 +14,13 @@ import { ReactRenderer } from "@tiptap/react";
 import Suggestion, { type SuggestionOptions, type SuggestionProps } from "@tiptap/suggestion";
 
 import Paper from "@mui/material/Paper";
+import Box from "@mui/material/Box";
 import List from "@mui/material/List";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import Typography from "@mui/material/Typography";
+import { alpha } from "@mui/material/styles";
 
 import TextFieldsIcon from "@mui/icons-material/TextFields";
 import TitleIcon from "@mui/icons-material/Title";
@@ -33,8 +35,9 @@ import TableChartIcon from "@mui/icons-material/TableChart";
 import YouTubeIcon from "@mui/icons-material/YouTube";
 import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import WarningAmberIcon from "@mui/icons-material/WarningAmber";
+import ArrowRightIcon from "@mui/icons-material/ArrowRight";
 import type { CustomSlashItem } from "./types";
-import { insertImageFromFile } from "./utils";
+import { floatingPaperSx, insertImageFromFile } from "./utils";
 
 type SlashItem = CustomSlashItem;
 
@@ -100,6 +103,15 @@ const SLASH_ITEMS: SlashItem[] = [
     icon: <ChecklistIcon fontSize="small" />,
     command: ({ editor, range }) => {
       editor.chain().focus().deleteRange(range).toggleTaskList().run();
+    },
+  },
+  {
+    title: "Toggle List",
+    description: "Collapsible content block",
+    category: "Lists",
+    icon: <ArrowRightIcon fontSize="small" />,
+    command: ({ editor, range }) => {
+      editor.chain().focus().deleteRange(range).setDetails().run();
     },
   },
   {
@@ -205,6 +217,9 @@ const SLASH_ITEMS: SlashItem[] = [
   },
 ];
 
+/** Kept in sync with the positioner's clipping maths below. */
+const MENU_WIDTH = 320;
+
 interface SlashMenuRef {
   onKeyDown: (props: { event: KeyboardEvent }) => boolean;
 }
@@ -274,15 +289,15 @@ const SlashMenuComponent = forwardRef<
 
   return (
     <Paper
-      elevation={8}
-      sx={{
-        width: 300,
-        maxWidth: "calc(100vw - 24px)",
-        maxHeight: 380,
+      elevation={0}
+      sx={(theme) => ({
+        ...floatingPaperSx(theme),
+        width: MENU_WIDTH,
+        maxHeight: 340,
         overflowY: "auto",
-        py: 0.5,
-        borderRadius: 2,
-      }}
+        overscrollBehavior: "contain",
+        py: 0.75,
+      })}
     >
       <List dense disablePadding ref={listRef}>
         {grouped.map((group) => (
@@ -293,13 +308,14 @@ const SlashMenuComponent = forwardRef<
                 color="text.disabled"
                 sx={{
                   display: "block",
-                  px: 1.5,
+                  px: 1.75,
                   pt: 1,
-                  pb: 0.25,
-                  fontWeight: 600,
+                  pb: 0.5,
+                  fontWeight: 500,
                   textTransform: "uppercase",
-                  letterSpacing: "0.05em",
-                  fontSize: "0.65rem",
+                  letterSpacing: "0.06em",
+                  fontSize: "0.6875rem",
+                  lineHeight: 1.2,
                 }}
               >
                 {group.category}
@@ -310,17 +326,51 @@ const SlashMenuComponent = forwardRef<
                 key={item.title}
                 selected={globalIndex === selectedIndex}
                 onClick={() => selectItem(globalIndex)}
-                sx={{ px: 1.5, py: 0.5, borderRadius: 1, mx: 0.5 }}
+                sx={(theme) => ({
+                  px: 1,
+                  py: 0.5,
+                  mx: 0.75,
+                  gap: 1.25,
+                  borderRadius: `${Math.min(Number(theme.shape.borderRadius), 4)}px`,
+                  "&.Mui-selected, &.Mui-selected:hover": {
+                    bgcolor: alpha(theme.palette.text.primary, 0.06),
+                  },
+                })}
               >
-                <ListItemIcon sx={{ minWidth: 32, color: "text.secondary" }}>
+                {/* Notion previews each block type in a small bordered tile. */}
+                <ListItemIcon
+                  sx={(theme) => ({
+                    minWidth: 0,
+                    width: 28,
+                    height: 28,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    borderRadius: `${Math.min(Number(theme.shape.borderRadius), 4)}px`,
+                    border: `1px solid ${theme.palette.divider}`,
+                    color: theme.palette.text.secondary,
+                    "& .MuiSvgIcon-root": { fontSize: 17 },
+                  })}
+                >
                   {item.icon}
                 </ListItemIcon>
                 <ListItemText
                   primary={item.title}
                   secondary={item.description}
+                  sx={{ my: 0 }}
                   slotProps={{
-                    primary: { variant: "body2", fontWeight: 500 },
-                    secondary: { variant: "caption", color: "text.disabled" },
+                    primary: {
+                      variant: "body2",
+                      fontWeight: 500,
+                      noWrap: true,
+                      sx: { lineHeight: 1.35 },
+                    },
+                    secondary: {
+                      variant: "caption",
+                      color: "text.disabled",
+                      noWrap: true,
+                      sx: { display: "block", lineHeight: 1.3 },
+                    },
                   }}
                 />
               </ListItemButton>
@@ -328,13 +378,22 @@ const SlashMenuComponent = forwardRef<
           </React.Fragment>
         ))}
       </List>
-      <Typography
-        variant="caption"
-        color="text.disabled"
-        sx={{ display: "block", textAlign: "center", py: 0.5 }}
+      <Box
+        sx={(theme) => ({
+          mt: 0.75,
+          pt: 0.75,
+          px: 1.75,
+          borderTop: `1px solid ${theme.palette.divider}`,
+        })}
       >
-        Type to filter · ↑↓ navigate · Enter select
-      </Typography>
+        <Typography
+          variant="caption"
+          color="text.disabled"
+          sx={{ display: "block", fontSize: "0.6875rem" }}
+        >
+          ↑↓ to navigate · ↵ to select · esc to dismiss
+        </Typography>
+      </Box>
     </Paper>
   );
 });
@@ -417,7 +476,7 @@ function updatePosition(
 ) {
   const rect = props.clientRect?.();
   if (!rect) return;
-  const popupWidth = 300; // matches Paper width
+  const popupWidth = MENU_WIDTH;
   const margin = 12;
   let left = rect.left + window.scrollX;
   // Prevent clipping off the right edge on narrow screens

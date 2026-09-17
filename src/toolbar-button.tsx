@@ -157,9 +157,9 @@ export const HBtn: React.FC<{
     sx={{
       fontFamily: theme.typography.fontFamily,
       fontSize: "0.7rem",
-      fontWeight: 700,
-      width: 34,
-      height: 34,
+      fontWeight: 600,
+      width: 30,
+      height: 30,
     }}
   >
     H{level}

@@ -69,25 +69,11 @@ export const TopToolbar: React.FC<{
   const cfg = { ...DEFAULT_TOOLBAR, ...toolbarConfig };
   const isMobile = !useMediaQuery(theme.breakpoints.up("sm"));
 
-  /* ── Toolbar container ────────────────────────────────────── */
-
-  const toolbarSx = {
-    display: "flex",
-    alignItems: "center",
-    flexWrap: "wrap" as const,
-    gap: 0.25,
-    px: 1.5,
-    py: 0.5,
-    borderBottom: `1px solid ${theme.palette.divider}`,
-    bgcolor: theme.palette.background.paper,
-    position: "sticky" as const,
-    top: 0,
-    zIndex: 2,
-    flexShrink: 0,
-  };
-
+  /* Layout and chrome come from `.notion-editor-header` in the editor
+     stylesheet, so the bar stays a single source of truth (and the print
+     rules can hide it). */
   return (
-    <Box sx={toolbarSx}>
+    <Box className="notion-editor-header">
       {/* History */}
       {cfg.history && (
         <>

@@ -22,6 +22,7 @@ import AddIcon from "@mui/icons-material/Add";
 import RemoveIcon from "@mui/icons-material/Remove";
 import { TBtn } from "./toolbar-button";
 import { useAnchorPosition } from "./hooks";
+import { floatingPaperSx } from "./utils";
 
 interface TableMenuProps {
   editor: Editor;
@@ -158,7 +159,9 @@ export const TableMenu: React.FC<TableMenuProps> = ({ editor, theme }) => {
 
       <Popover
         {...popoverProps}
-        slotProps={{ paper: { sx: { p: 0.5, maxWidth: "calc(100vw - 24px)" } } }}
+        slotProps={{
+          paper: { elevation: 0, sx: { ...floatingPaperSx(theme), p: 0.5 } },
+        }}
       >
         {!isInTable ? (
           <GridPicker theme={theme} onSelect={insertTable} />

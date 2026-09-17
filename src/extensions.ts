@@ -1,4 +1,5 @@
-import type { AnyExtension } from "@tiptap/core";
+import type { AnyExtension, Editor } from "@tiptap/core";
+import type { Node as ProseMirrorNode } from "@tiptap/pm/model";
 import type { Theme } from "@mui/material/styles";
 
 import StarterKit from "@tiptap/starter-kit";
@@ -23,8 +24,12 @@ import { Youtube } from "@tiptap/extension-youtube";
 import { CharacterCount } from "@tiptap/extension-character-count";
 import { Typography } from "@tiptap/extension-typography";
 import Emoji, { gitHubEmojis } from "@tiptap/extension-emoji";
+import { Details, DetailsContent, DetailsSummary } from "@tiptap/extension-details";
+import { FileHandler } from "@tiptap/extension-file-handler";
 
 import { SlashCommands } from "./slash-menu";
+import { TrailingNode } from "./trailing-node";
+import { insertImageFromFile } from "./utils";
 import type { CustomSlashItem } from "./types";
 
 /**
@@ -32,6 +37,63 @@ import type { CustomSlashItem } from "./types";
  * stateless, so it is built once per module rather than per editor.
  */
 const lowlight = createLowlight(common);
+
+/** Notion names an empty block after the block type itself. */
+const BLOCK_PLACEHOLDERS: Record<string, string> = {
+  heading1: "Heading 1",
+  heading2: "Heading 2",
+  heading3: "Heading 3",
+  detailsSummary: "Toggle",
+  codeBlock: "",
+};
+
+/**
+ * Containers whose empty children are named after the container instead — and
+ * table cells, which Notion leaves unlabelled.
+ */
+const PARENT_PLACEHOLDERS: Record<string, string> = {
+  blockquote: "Empty quote",
+  detailsContent: "Empty toggle",
+  listItem: "List",
+  taskItem: "To-do",
+  tableCell: "",
+  tableHeader: "",
+};
+
+/**
+ * Notion labels each empty block rather than showing one placeholder for the
+ * whole document: the first line gets the document prompt, any other empty
+ * paragraph invites the slash menu, and structural blocks name themselves.
+ */
+function blockPlaceholder(docPlaceholder: string) {
+  return ({
+    editor,
+    node,
+    pos,
+  }: {
+    editor: Editor;
+    node: ProseMirrorNode;
+    pos: number;
+  }): string => {
+    const key =
+      node.type.name === "heading"
+        ? `heading${String(node.attrs.level ?? 1)}`
+        : node.type.name;
+
+    const own = BLOCK_PLACEHOLDERS[key];
+    if (own !== undefined) return own;
+
+    /* `pos` comes from the plugin's own doc walk, which can be a step behind
+       `editor.state`; stay inside the current doc so resolve() can't throw. */
+    const { doc } = editor.state;
+    if (pos >= 0 && pos <= doc.content.size) {
+      const fromParent = PARENT_PLACEHOLDERS[doc.resolve(pos).parent.type.name];
+      if (fromParent !== undefined) return fromParent;
+    }
+
+    return pos === 0 ? docPlaceholder : "Type '/' for commands";
+  };
+}
 
 /**
  * Custom Image extension that supports inline `style` attribute for alignment.
@@ -94,9 +156,16 @@ export function getDefaultExtensions(
         width: 2,
       },
     }),
-    Placeholder.configure({ placeholder }),
+    Placeholder.configure({
+      placeholder: blockPlaceholder(placeholder),
+      includeChildren: true,
+    }),
     TaskList,
     TaskItem.configure({ nested: true }),
+    /* `persist` keeps a toggle's open/closed state in the document. */
+    Details.configure({ persist: true }),
+    DetailsSummary,
+    DetailsContent,
     Highlight.configure({ multicolor: true }),
     TextAlign.configure({ types: ["heading", "paragraph"] }),
     CustomImage.configure({ allowBase64: true, inline: false }),
@@ -123,5 +192,16 @@ export function getDefaultExtensions(
       emojis: gitHubEmojis,
       enableEmoticons: true,
     }),
+    /* Drop or paste an image straight onto the page, as Notion does. */
+    FileHandler.configure({
+      allowedMimeTypes: ["image/png", "image/jpeg", "image/gif", "image/webp", "image/svg+xml"],
+      onDrop: (editor, files, pos) => {
+        files.forEach((file) => insertImageFromFile(editor, file, pos));
+      },
+      onPaste: (editor, files) => {
+        files.forEach((file) => insertImageFromFile(editor, file));
+      },
+    }),
+    TrailingNode,
   ];
 }

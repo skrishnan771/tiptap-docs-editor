@@ -11,6 +11,7 @@ import Button from "@mui/material/Button";
 import Typography from "@mui/material/Typography";
 import { TBtn } from "./toolbar-button";
 import { useAnchorPosition } from "./hooks";
+import { floatingPaperSx } from "./utils";
 
 /** Matches the CSS hex notations: #rgb, #rgba, #rrggbb, #rrggbbaa. */
 const HEX_COLOR = /^#(?:[0-9a-fA-F]{3,4}|[0-9a-fA-F]{6}|[0-9a-fA-F]{8})$/;
@@ -92,7 +93,12 @@ export const ColorPickerButton: React.FC<ColorPickerButtonProps> = ({
 
       <Popover
         {...popoverProps}
-        slotProps={{ paper: { sx: { p: 1.5, width: 220, maxWidth: "calc(100vw - 24px)" } } }}
+        slotProps={{
+          paper: {
+            elevation: 0,
+            sx: { ...floatingPaperSx(theme), p: 1.5, width: 232 },
+          },
+        }}
       >
         <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: "block" }}>
           {label}

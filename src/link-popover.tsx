@@ -13,6 +13,7 @@ import LinkIcon from "@mui/icons-material/Link";
 import LinkOffIcon from "@mui/icons-material/LinkOff";
 import { TBtn, isActive } from "./toolbar-button";
 import { useAnchorPosition } from "./hooks";
+import { floatingPaperSx } from "./utils";
 
 interface LinkPopoverProps {
   editor: Editor;
@@ -84,7 +85,12 @@ export const LinkPopoverButton: React.FC<LinkPopoverProps> = ({
 
       <Popover
         {...popoverProps}
-        slotProps={{ paper: { sx: { p: 2, width: 320, maxWidth: "calc(100vw - 24px)" } } }}
+        slotProps={{
+          paper: {
+            elevation: 0,
+            sx: { ...floatingPaperSx(theme), p: 2, width: 320 },
+          },
+        }}
       >
         <TextField
           size="small"

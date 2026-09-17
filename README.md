@@ -4,12 +4,16 @@ A drop-in, Notion-style rich text editor component for React — built on [Tipta
 
 ## Features
 
+- **Notion-style page layout** — a centred 708px text column inside a 96px gutter, Notion's type scale and block rhythm, and per-block placeholders (`Type '/' for commands`)
 - **Configurable top toolbar** — undo/redo, font family & size, text formatting (bold, italic, underline, strike, code, superscript, subscript), text & highlight color pickers, headings, lists, blockquotes, code blocks, images, inline link editor, table insertion with grid picker, text alignment (left/center/right/justify), clear formatting, and print
 - **Bubble menu** — floating toolbar on text selection for quick inline formatting, link editing, superscript & subscript
 - **Image bubble menu** — resize (25% / 50% / 100%), align (left / center / right), and delete images on click
 - **Table support** — insert tables with a visual grid picker, resize columns, add/remove rows & columns, merge/split cells
 - **Slash commands** — type `/` to insert blocks, organized by category (Basic, Lists, Blocks, Inserts, Embeds), with support for custom items
-- **Drag handle** — drag & drop blocks to reorder content
+- **Left-gutter block controls** — hover any block for Notion's drag grip and "add block below" button, both sitting in the page gutter
+- **Toggle lists** — collapsible `details` blocks whose open state is saved with the document
+- **Drop & paste images** — drag an image file onto the page or paste one from the clipboard
+- **Trailing paragraph** — always keeps a place to click below the last block, so a document ending in a table or code block stays reachable
 - **Syntax-highlighted code blocks** — powered by [lowlight](https://github.com/wooorm/lowlight) with common language support
 - **Task lists** — interactive checklists with nesting support
 - **Image support** — upload via file picker from the toolbar or slash menu
@@ -17,7 +21,7 @@ A drop-in, Notion-style rich text editor component for React — built on [Tipta
 - **Typography** — smart quotes, dashes, and other typographic enhancements
 - **Character & word count** — optional footer bar showing live character and word counts
 - **Read-only mode** — toggle `editable` to switch between editing and viewing
-- **Customizable toolbar** — show/hide toolbar sections via `ToolbarConfig`
+- **Customizable toolbar** — show/hide toolbar sections via `ToolbarConfig`, or pass `toolbar={false}` for the toolbar-less Notion layout
 - **Custom slash items** — inject your own slash menu entries with `slashMenuItems`
 - **Theme-aware** — fully styled from your MUI theme (light & dark mode)
 - **Spellcheck control** — browser spellcheck is off by default; enable it with `spellCheck={true}`
@@ -80,7 +84,7 @@ function App() {
 | `placeholder`        | `string`                   | No       | `"Start writing…"` | Placeholder text shown when the editor is empty              |
 | `onReady`            | `(editor: Editor) => void` | No       | —                  | Called once with the Tiptap `Editor` instance after creation |
 | `editable`           | `boolean`                  | No       | `true`             | Whether the editor is editable or read-only                  |
-| `toolbar`            | `ToolbarConfig`            | No       | all enabled        | Toggle visibility of toolbar sections                        |
+| `toolbar`            | `ToolbarConfig \| false`   | No       | all enabled        | Toggle toolbar sections, or `false` to hide the toolbar      |
 | `slashMenuItems`     | `CustomSlashItem[]`        | No       | —                  | Additional custom entries for the slash command menu         |
 | `showCharacterCount` | `boolean`                  | No       | `false`            | Show a character & word count footer bar                     |
 | `spellCheck`         | `boolean`                  | No       | `false`            | Enable browser spellcheck (red underlines for typos)         |
@@ -88,13 +92,22 @@ function App() {
 ### Exports
 
 ```ts
-import { DocsEditor, getDefaultExtensions, CustomImage, SlashCommands } from "tiptap-docs-editor";
+import {
+  DocsEditor,
+  getDefaultExtensions,
+  CustomImage,
+  SlashCommands,
+  TrailingNode,
+  buildEditorCss,
+} from "tiptap-docs-editor";
 import type {
   DocsEditorProps,
   ToolbarConfig,
   CustomSlashItem,
   ToolbarAction,
   DefaultExtensionOptions,
+  SlashCommandsOptions,
+  TrailingNodeOptions,
 } from "tiptap-docs-editor";
 ```
 
@@ -104,11 +117,15 @@ import type {
 | `getDefaultExtensions`    | Function  | Returns the default extensions array (for customization) |
 | `CustomImage`             | Extension | Image extension with alignment & style support           |
 | `SlashCommands`           | Extension | Slash command menu extension                             |
+| `TrailingNode`            | Extension | Keeps an empty paragraph at the end of the document      |
+| `buildEditorCss`          | Function  | Builds the editor stylesheet for a theme — useful for styling saved HTML outside the editor |
 | `DocsEditorProps`         | Type      | Props interface for `DocsEditor`                         |
 | `ToolbarConfig`           | Type      | Configuration to show/hide toolbar sections              |
 | `CustomSlashItem`         | Type      | Shape of a custom slash menu item                        |
 | `ToolbarAction`           | Type      | Union of all built-in toolbar action names               |
 | `DefaultExtensionOptions` | Type      | Options accepted by `getDefaultExtensions()`             |
+| `SlashCommandsOptions`    | Type      | Options accepted by `SlashCommands.configure()`          |
+| `TrailingNodeOptions`     | Type      | Options accepted by `TrailingNode.configure()`           |
 
 ### Custom Extensions
 
@@ -179,6 +196,13 @@ Control which toolbar sections are visible. All default to `true`.
 />
 ```
 
+For the pure Notion look — no toolbar at all, with formatting living entirely in
+the selection and slash menus — pass `false`:
+
+```tsx
+<DocsEditor content={content} theme={theme} onChange={setContent} toolbar={false} />
+```
+
 ### `CustomSlashItem`
 
 Add your own entries to the slash command menu:
@@ -238,6 +262,7 @@ Type `/` at the beginning of a new line or after a space to open the command men
 | Lists    | Bullet List   | Unordered list            |
 | Lists    | Numbered List | Ordered list              |
 | Lists    | Task List     | Checklist with checkboxes |
+| Lists    | Toggle List   | Collapsible content block |
 | Blocks   | Blockquote    | Indented quote block      |
 | Blocks   | Code Block    | Syntax-highlighted code   |
 | Blocks   | Callout       | Info callout block        |

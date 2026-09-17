@@ -45,11 +45,12 @@ export const ImageBubbleMenu: React.FC<ImageBubbleMenuProps> = ({ editor, theme 
   return (
     <BubbleMenu
       editor={editor}
+      className="tiptap-floating-menu"
       style={{ zIndex: 10 }}
       options={{ placement: "top", offset: { mainAxis: 8 } }}
       shouldShow={({ editor: e }) => e.isActive("image")}
     >
-      <Paper elevation={8} sx={{ ...bubbleMenuPaperSx(theme), px: 0.75 }}>
+      <Paper elevation={0} sx={{ ...bubbleMenuPaperSx(theme), px: 0.75 }}>
         <TBtn label="Small (25%)" action="custom" editor={editor} theme={theme} onCustomAction={() => setImageSize("25%")}>
           <PhotoSizeSelectSmallIcon sx={{ fontSize: 16 }} />
         </TBtn>

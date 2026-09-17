@@ -6,9 +6,8 @@ import DragHandle from "@tiptap/extension-drag-handle-react";
 
 import Box from "@mui/material/Box";
 import MuiTypography from "@mui/material/Typography";
-import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import { alpha, type Theme } from "@mui/material/styles";
+import type { Theme } from "@mui/material/styles";
 import DragIndicatorIcon from "@mui/icons-material/DragIndicator";
 import AddIcon from "@mui/icons-material/Add";
 
@@ -34,6 +33,7 @@ const CharacterCountBar: React.FC<{ editor: Editor; theme: Theme }> = ({
 
   return (
     <Box
+      className="notion-editor-footer"
       sx={{
         display: "flex",
         justifyContent: "flex-end",
@@ -120,6 +120,18 @@ const DocsEditor: React.FC<DocsEditorProps> = ({
     }
   }, [editor, editable]);
 
+  // The drag handle reports which block the pointer is over; "add block"
+  // inserts after *that* block rather than wherever the caret happens to be.
+  const hoveredPosRef = useRef(-1);
+
+  const addBlockBelow = useCallback(() => {
+    if (!editor) return;
+    const pos = hoveredPosRef.current;
+    const node = pos >= 0 ? editor.state.doc.nodeAt(pos) : null;
+    const insertAt = node ? pos + node.nodeSize : editor.state.selection.to;
+    editor.chain().focus().insertContentAt(insertAt, { type: "paragraph" }).run();
+  }, [editor]);
+
   const handleFileChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       const file = e.target.files?.[0];
@@ -131,8 +143,6 @@ const DocsEditor: React.FC<DocsEditorProps> = ({
 
   if (!editor) return null;
 
-  const brHalf = `${Number(theme.shape.borderRadius) / 2}px`;
-
   return (
     <Box className="notion-editor-wrapper">
       <input
@@ -143,7 +153,7 @@ const DocsEditor: React.FC<DocsEditorProps> = ({
         style={{ display: "none" }}
       />
 
-      {editable && (
+      {editable && toolbar !== false && (
         <TopToolbar
           editor={editor}
           theme={theme}
@@ -155,63 +165,42 @@ const DocsEditor: React.FC<DocsEditorProps> = ({
       <BubbleToolbar editor={editor} theme={theme} />
       <ImageBubbleMenu editor={editor} theme={theme} />
 
-      {/* Drag handle with optional add block button */}
+      {/* Left-gutter block affordances */}
       {editable && (
         <DragHandle
           editor={editor}
           nested={{ edgeDetection: { threshold: -16 } }}
+          onNodeChange={({ pos }) => {
+            hoveredPosRef.current = pos;
+          }}
         >
           <Box className="notion-drag-handle">
-            <Tooltip title="Add block">
-              <IconButton
-                size="small"
-                onClick={() => {
-                  const { to } = editor.state.selection;
-                  editor
-                    .chain()
-                    .focus()
-                    .insertContentAt(to, { type: "paragraph" })
-                    .run();
+            <Tooltip title="Add block below" arrow placement="top">
+              <Box
+                component="button"
+                type="button"
+                aria-label="Add block below"
+                className="notion-gutter-btn"
+                onMouseDown={(e) => {
+                  e.preventDefault();
+                  addBlockBelow();
                 }}
-                sx={{
-                  width: 20,
-                  height: 20,
-                  color: theme.palette.text.disabled,
-                  opacity: 0.5,
-                  transition: "all 0.2s ease",
-                  "&:hover": {
-                    opacity: 1,
-                    color: theme.palette.text.secondary,
-                    bgcolor: alpha(theme.palette.text.primary, 0.08),
-                  },
-                }}
+                sx={{ width: 24, height: 24, p: 0, border: 0, bgcolor: "transparent" }}
               >
-                <AddIcon sx={{ fontSize: 14 }} />
-              </IconButton>
+                <AddIcon sx={{ fontSize: 17 }} />
+              </Box>
             </Tooltip>
             <Box
+              className="notion-gutter-btn"
+              aria-label="Drag to move block"
               sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: 20,
+                width: 18,
                 height: 24,
                 cursor: "grab",
-                borderRadius: brHalf,
-                color: theme.palette.text.disabled,
-                opacity: 0.5,
-                transition: "all 0.2s ease",
-                "&:hover": {
-                  opacity: 1,
-                  color: theme.palette.text.secondary,
-                  bgcolor: alpha(theme.palette.text.primary, 0.08),
-                },
-                "&:active": {
-                  cursor: "grabbing",
-                },
+                "&:active": { cursor: "grabbing" },
               }}
             >
-              <DragIndicatorIcon sx={{ fontSize: 16 }} />
+              <DragIndicatorIcon sx={{ fontSize: 17 }} />
             </Box>
           </Box>
         </DragHandle>
@@ -220,7 +209,9 @@ const DocsEditor: React.FC<DocsEditorProps> = ({
       {/* Content area */}
       <Box className="notion-editor-layout">
         <Box className="notion-editor-content">
-          <EditorContent editor={editor} />
+          <Box className="notion-editor-page">
+            <EditorContent editor={editor} />
+          </Box>
         </Box>
       </Box>
 

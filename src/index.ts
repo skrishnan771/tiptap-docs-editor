@@ -9,3 +9,7 @@ export type {
 export type { ToolbarAction } from "./toolbar-button";
 export { SlashCommands } from "./slash-menu";
 export type { SlashCommandsOptions } from "./slash-menu";
+export { TrailingNode } from "./trailing-node";
+export type { TrailingNodeOptions } from "./trailing-node";
+/** Useful for styling saved HTML outside the editor with the same rules. */
+export { buildEditorCss } from "./editor-css";

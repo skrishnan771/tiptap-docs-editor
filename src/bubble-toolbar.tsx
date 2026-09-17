@@ -32,7 +32,7 @@ import { TBtn } from "./toolbar-button";
 import { LinkPopoverButton } from "./link-popover";
 import { ColorPickerButton } from "./color-picker";
 import { useAnchorPosition, useEditorState } from "./hooks";
-import { bubbleMenuPaperSx } from "./utils";
+import { bubbleMenuPaperSx, floatingPaperSx } from "./utils";
 
 interface TurnIntoOption {
   label: string;
@@ -72,6 +72,7 @@ export const BubbleToolbar: React.FC<{ editor: Editor; theme: Theme }> = ({
   return (
     <BubbleMenu
       editor={editor}
+      className="tiptap-floating-menu"
       style={{ zIndex: 10 }}
       options={{ placement: "top", offset: { mainAxis: 8 } }}
       shouldShow={({ editor: e, state }) => {
@@ -82,7 +83,7 @@ export const BubbleToolbar: React.FC<{ editor: Editor; theme: Theme }> = ({
         return true;
       }}
     >
-      <Paper elevation={8} sx={bubbleMenuPaperSx(theme)}>
+      <Paper elevation={0} sx={bubbleMenuPaperSx(theme)}>
         {/* Turn into dropdown */}
         <Button
           size="small"
@@ -109,12 +110,8 @@ export const BubbleToolbar: React.FC<{ editor: Editor; theme: Theme }> = ({
           {...turnIntoProps}
           slotProps={{
             paper: {
-              sx: {
-                minWidth: 180,
-                mt: 0.5,
-                borderRadius: `${theme.shape.borderRadius}px`,
-                border: `1px solid ${theme.palette.divider}`,
-              },
+              elevation: 0,
+              sx: { ...floatingPaperSx(theme), minWidth: 190, mt: 0.5, py: 0.5 },
             },
           }}
         >

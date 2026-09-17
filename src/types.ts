@@ -34,7 +34,11 @@ export interface DocsEditorProps {
   onChange: (html: string) => void;
   onReady?: (editor: Editor) => void;
   editable?: boolean;
-  toolbar?: ToolbarConfig;
+  /**
+   * Which toolbar sections to show. Pass `false` for the toolbar-less Notion
+   * layout, where formatting lives entirely in the selection and slash menus.
+   */
+  toolbar?: ToolbarConfig | false;
   /** Slash menu items (only used when `extensions` is not provided). */
   slashMenuItems?: CustomSlashItem[];
   showCharacterCount?: boolean;
