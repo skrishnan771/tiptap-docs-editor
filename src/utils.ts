@@ -45,7 +45,7 @@ export function bubbleMenuPaperSx(theme: Theme): SxProps<Theme> {
 export function insertImageFromFile(
   editor: Editor,
   file: File,
-  pos?: number
+  pos?: number,
 ): void {
   const reader = new FileReader();
   reader.onload = () => {

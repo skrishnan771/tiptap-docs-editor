@@ -26,7 +26,11 @@ export const LinkPopoverButton: React.FC<LinkPopoverProps> = ({
   theme,
   iconSize = 20,
 }) => {
-  const { open: openPopover, close: closePopover, popoverProps } = useAnchorPosition();
+  const {
+    open: openPopover,
+    close: closePopover,
+    popoverProps,
+  } = useAnchorPosition();
   const [url, setUrl] = useState("");
   const [openInNewTab, setOpenInNewTab] = useState(true);
 
@@ -39,7 +43,7 @@ export const LinkPopoverButton: React.FC<LinkPopoverProps> = ({
       setOpenInNewTab(attrs.target === "_blank");
       openPopover(el);
     },
-    [editor, openPopover]
+    [editor, openPopover],
   );
 
   const applyLink = useCallback(() => {

@@ -29,7 +29,8 @@ interface FontControlsProps {
 }
 
 export const FontFamilySelect: React.FC<FontControlsProps> = ({ editor }) => {
-  const current = (editor.getAttributes("textStyle").fontFamily as string) ?? "";
+  const current =
+    (editor.getAttributes("textStyle").fontFamily as string) ?? "";
   // A document can carry a family we don't offer; listing it keeps the Select
   // from rendering an out-of-range value.
   const options = FONT_FAMILIES.some((f) => f.value === current)
@@ -62,7 +63,8 @@ export const FontFamilySelect: React.FC<FontControlsProps> = ({ editor }) => {
 };
 
 export const FontSizeSelect: React.FC<FontControlsProps> = ({ editor }) => {
-  const currentSize = (editor.getAttributes("textStyle").fontSize as string) ?? "16";
+  const currentSize =
+    (editor.getAttributes("textStyle").fontSize as string) ?? "16";
   const current = String(parseInt(currentSize, 10) || 16);
   const options = FONT_SIZES.includes(current)
     ? FONT_SIZES

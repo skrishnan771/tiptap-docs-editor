@@ -88,7 +88,7 @@ const DocsEditor: React.FC<DocsEditorProps> = ({
         placeholder,
         slashMenuItems,
       }),
-    [extensionsProp, theme, placeholder, slashMenuItems]
+    [extensionsProp, theme, placeholder, slashMenuItems],
   );
 
   const editor = useEditor({
@@ -129,7 +129,11 @@ const DocsEditor: React.FC<DocsEditorProps> = ({
     const pos = hoveredPosRef.current;
     const node = pos >= 0 ? editor.state.doc.nodeAt(pos) : null;
     const insertAt = node ? pos + node.nodeSize : editor.state.selection.to;
-    editor.chain().focus().insertContentAt(insertAt, { type: "paragraph" }).run();
+    editor
+      .chain()
+      .focus()
+      .insertContentAt(insertAt, { type: "paragraph" })
+      .run();
   }, [editor]);
 
   const handleFileChange = useCallback(
@@ -138,7 +142,7 @@ const DocsEditor: React.FC<DocsEditorProps> = ({
       if (file && editor) insertImageFromFile(editor, file);
       e.target.value = "";
     },
-    [editor]
+    [editor],
   );
 
   if (!editor) return null;
@@ -185,7 +189,13 @@ const DocsEditor: React.FC<DocsEditorProps> = ({
                   e.preventDefault();
                   addBlockBelow();
                 }}
-                sx={{ width: 24, height: 24, p: 0, border: 0, bgcolor: "transparent" }}
+                sx={{
+                  width: 24,
+                  height: 24,
+                  p: 0,
+                  border: 0,
+                  bgcolor: "transparent",
+                }}
               >
                 <AddIcon sx={{ fontSize: 17 }} />
               </Box>
@@ -215,7 +225,9 @@ const DocsEditor: React.FC<DocsEditorProps> = ({
         </Box>
       </Box>
 
-      {showCharacterCount && <CharacterCountBar editor={editor} theme={theme} />}
+      {showCharacterCount && (
+        <CharacterCountBar editor={editor} theme={theme} />
+      )}
     </Box>
   );
 };

@@ -40,10 +40,20 @@ const GridPicker: React.FC<{
 
   return (
     <Box sx={{ p: 1 }}>
-      <Typography variant="caption" color="text.secondary" sx={{ mb: 0.5, display: "block" }}>
+      <Typography
+        variant="caption"
+        color="text.secondary"
+        sx={{ mb: 0.5, display: "block" }}
+      >
         {hoverRow > 0 ? `${hoverRow} × ${hoverCol}` : "Select table size"}
       </Typography>
-      <Box sx={{ display: "grid", gridTemplateColumns: `repeat(${maxCols}, 1fr)`, gap: "3px" }}>
+      <Box
+        sx={{
+          display: "grid",
+          gridTemplateColumns: `repeat(${maxCols}, 1fr)`,
+          gap: "3px",
+        }}
+      >
         {Array.from({ length: maxRows * maxCols }).map((_, i) => {
           const r = Math.floor(i / maxCols) + 1;
           const c = (i % maxCols) + 1;
@@ -51,8 +61,14 @@ const GridPicker: React.FC<{
           return (
             <Box
               key={i}
-              onMouseEnter={() => { setHoverRow(r); setHoverCol(c); }}
-              onMouseDown={(e) => { e.preventDefault(); onSelect(r, c); }}
+              onMouseEnter={() => {
+                setHoverRow(r);
+                setHoverCol(c);
+              }}
+              onMouseDown={(e) => {
+                e.preventDefault();
+                onSelect(r, c);
+              }}
               sx={{
                 width: 20,
                 height: 20,
@@ -85,14 +101,19 @@ const TableOpBtn: React.FC<{
   children: React.ReactNode;
 }> = ({ label, theme, danger = false, onClick, children }) => {
   const idle = danger ? theme.palette.error.main : theme.palette.text.secondary;
-  const hover = danger ? theme.palette.error.main : theme.palette.secondary.main;
+  const hover = danger
+    ? theme.palette.error.main
+    : theme.palette.secondary.main;
 
   return (
     <Tooltip title={label} arrow placement="top">
       <span>
         <IconButton
           size="small"
-          onMouseDown={(e) => { e.preventDefault(); onClick(); }}
+          onMouseDown={(e) => {
+            e.preventDefault();
+            onClick();
+          }}
           sx={{
             borderRadius: `${theme.shape.borderRadius}px`,
             color: idle,
@@ -115,28 +136,73 @@ interface TableOp {
 
 const TABLE_OP_ROWS: TableOp[][] = [
   [
-    { label: "Add column before", icon: <ViewColumnIcon fontSize="small" />, run: (c) => c.addColumnBefore() },
-    { label: "Add column after", icon: <AddIcon fontSize="small" />, run: (c) => c.addColumnAfter() },
-    { label: "Delete column", icon: <RemoveIcon fontSize="small" />, run: (c) => c.deleteColumn() },
+    {
+      label: "Add column before",
+      icon: <ViewColumnIcon fontSize="small" />,
+      run: (c) => c.addColumnBefore(),
+    },
+    {
+      label: "Add column after",
+      icon: <AddIcon fontSize="small" />,
+      run: (c) => c.addColumnAfter(),
+    },
+    {
+      label: "Delete column",
+      icon: <RemoveIcon fontSize="small" />,
+      run: (c) => c.deleteColumn(),
+    },
   ],
   [
-    { label: "Add row before", icon: <TableRowsIcon fontSize="small" />, run: (c) => c.addRowBefore() },
-    { label: "Add row after", icon: <AddIcon fontSize="small" />, run: (c) => c.addRowAfter() },
-    { label: "Delete row", icon: <RemoveIcon fontSize="small" />, run: (c) => c.deleteRow() },
+    {
+      label: "Add row before",
+      icon: <TableRowsIcon fontSize="small" />,
+      run: (c) => c.addRowBefore(),
+    },
+    {
+      label: "Add row after",
+      icon: <AddIcon fontSize="small" />,
+      run: (c) => c.addRowAfter(),
+    },
+    {
+      label: "Delete row",
+      icon: <RemoveIcon fontSize="small" />,
+      run: (c) => c.deleteRow(),
+    },
   ],
   [
-    { label: "Merge cells", icon: <MergeTypeIcon fontSize="small" />, run: (c) => c.mergeCells() },
-    { label: "Split cell", icon: <CallSplitIcon fontSize="small" />, run: (c) => c.splitCell() },
-    { label: "Delete table", icon: <DeleteOutlineIcon fontSize="small" />, run: (c) => c.deleteTable(), danger: true },
+    {
+      label: "Merge cells",
+      icon: <MergeTypeIcon fontSize="small" />,
+      run: (c) => c.mergeCells(),
+    },
+    {
+      label: "Split cell",
+      icon: <CallSplitIcon fontSize="small" />,
+      run: (c) => c.splitCell(),
+    },
+    {
+      label: "Delete table",
+      icon: <DeleteOutlineIcon fontSize="small" />,
+      run: (c) => c.deleteTable(),
+      danger: true,
+    },
   ],
 ];
 
 export const TableMenu: React.FC<TableMenuProps> = ({ editor, theme }) => {
-  const { open: openPopover, close: closePopover, popoverProps } = useAnchorPosition();
+  const {
+    open: openPopover,
+    close: closePopover,
+    popoverProps,
+  } = useAnchorPosition();
   const isInTable = editor.isActive("table");
 
   const insertTable = (rows: number, cols: number) => {
-    editor.chain().focus().insertTable({ rows, cols, withHeaderRow: true }).run();
+    editor
+      .chain()
+      .focus()
+      .insertTable({ rows, cols, withHeaderRow: true })
+      .run();
     closePopover();
   };
 
@@ -166,7 +232,15 @@ export const TableMenu: React.FC<TableMenuProps> = ({ editor, theme }) => {
         {!isInTable ? (
           <GridPicker theme={theme} onSelect={insertTable} />
         ) : (
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 0.5, p: 1, minWidth: 180 }}>
+          <Box
+            sx={{
+              display: "flex",
+              flexDirection: "column",
+              gap: 0.5,
+              p: 1,
+              minWidth: 180,
+            }}
+          >
             <Typography variant="caption" color="text.secondary">
               Table operations
             </Typography>

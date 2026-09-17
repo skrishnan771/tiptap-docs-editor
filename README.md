@@ -111,21 +111,21 @@ import type {
 } from "tiptap-docs-editor";
 ```
 
-| Export                    | Kind      | Description                                              |
-| ------------------------- | --------- | -------------------------------------------------------- |
-| `DocsEditor`              | Component | The main editor component                                |
-| `getDefaultExtensions`    | Function  | Returns the default extensions array (for customization) |
-| `CustomImage`             | Extension | Image extension with alignment & style support           |
-| `SlashCommands`           | Extension | Slash command menu extension                             |
-| `TrailingNode`            | Extension | Keeps an empty paragraph at the end of the document      |
+| Export                    | Kind      | Description                                                                                 |
+| ------------------------- | --------- | ------------------------------------------------------------------------------------------- |
+| `DocsEditor`              | Component | The main editor component                                                                   |
+| `getDefaultExtensions`    | Function  | Returns the default extensions array (for customization)                                    |
+| `CustomImage`             | Extension | Image extension with alignment & style support                                              |
+| `SlashCommands`           | Extension | Slash command menu extension                                                                |
+| `TrailingNode`            | Extension | Keeps an empty paragraph at the end of the document                                         |
 | `buildEditorCss`          | Function  | Builds the editor stylesheet for a theme — useful for styling saved HTML outside the editor |
-| `DocsEditorProps`         | Type      | Props interface for `DocsEditor`                         |
-| `ToolbarConfig`           | Type      | Configuration to show/hide toolbar sections              |
-| `CustomSlashItem`         | Type      | Shape of a custom slash menu item                        |
-| `ToolbarAction`           | Type      | Union of all built-in toolbar action names               |
-| `DefaultExtensionOptions` | Type      | Options accepted by `getDefaultExtensions()`             |
-| `SlashCommandsOptions`    | Type      | Options accepted by `SlashCommands.configure()`          |
-| `TrailingNodeOptions`     | Type      | Options accepted by `TrailingNode.configure()`           |
+| `DocsEditorProps`         | Type      | Props interface for `DocsEditor`                                                            |
+| `ToolbarConfig`           | Type      | Configuration to show/hide toolbar sections                                                 |
+| `CustomSlashItem`         | Type      | Shape of a custom slash menu item                                                           |
+| `ToolbarAction`           | Type      | Union of all built-in toolbar action names                                                  |
+| `DefaultExtensionOptions` | Type      | Options accepted by `getDefaultExtensions()`                                                |
+| `SlashCommandsOptions`    | Type      | Options accepted by `SlashCommands.configure()`                                             |
+| `TrailingNodeOptions`     | Type      | Options accepted by `TrailingNode.configure()`                                              |
 
 ### Custom Extensions
 
@@ -148,7 +148,7 @@ import Placeholder from "@tiptap/extension-placeholder";
   content={content}
   theme={theme}
   onChange={setContent}
-/>
+/>;
 ```
 
 You can also start from the defaults and selectively remove extensions:
@@ -156,19 +156,26 @@ You can also start from the defaults and selectively remove extensions:
 ```tsx
 import { DocsEditor, getDefaultExtensions } from "tiptap-docs-editor";
 
-const extensions = getDefaultExtensions({ theme, placeholder: "Write…" })
-  .filter((ext) => ext.name !== "youtube"); // remove YouTube
+const extensions = getDefaultExtensions({
+  theme,
+  placeholder: "Write…",
+}).filter((ext) => ext.name !== "youtube"); // remove YouTube
 
-<DocsEditor extensions={extensions} content={content} theme={theme} onChange={setContent} />
+<DocsEditor
+  extensions={extensions}
+  content={content}
+  theme={theme}
+  onChange={setContent}
+/>;
 ```
 
 `getDefaultExtensions` accepts:
 
-| Option           | Type               | Description                          |
-| ---------------- | ------------------ | ------------------------------------ |
-| `theme`          | `Theme`            | MUI theme (required for slash menu)  |
-| `placeholder`    | `string`           | Placeholder text                     |
-| `slashMenuItems` | `CustomSlashItem[]`| Additional slash menu entries        |
+| Option           | Type                | Description                         |
+| ---------------- | ------------------- | ----------------------------------- |
+| `theme`          | `Theme`             | MUI theme (required for slash menu) |
+| `placeholder`    | `string`            | Placeholder text                    |
+| `slashMenuItems` | `CustomSlashItem[]` | Additional slash menu entries       |
 
 ### `ToolbarConfig`
 
@@ -200,7 +207,12 @@ For the pure Notion look — no toolbar at all, with formatting living entirely 
 the selection and slash menus — pass `false`:
 
 ```tsx
-<DocsEditor content={content} theme={theme} onChange={setContent} toolbar={false} />
+<DocsEditor
+  content={content}
+  theme={theme}
+  onChange={setContent}
+  toolbar={false}
+/>
 ```
 
 ### `CustomSlashItem`

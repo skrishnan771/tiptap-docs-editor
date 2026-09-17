@@ -24,7 +24,9 @@ export const TrailingNode = Extension.create<TrailingNodeOptions>({
   addProseMirrorPlugins() {
     const key = new PluginKey(this.name);
     const { notAfter } = this.options;
-    const needsTrailingNode = (doc: { lastChild: { type: { name: string } } | null }) => {
+    const needsTrailingNode = (doc: {
+      lastChild: { type: { name: string } } | null;
+    }) => {
       const last = doc.lastChild;
       return last ? !notAfter.includes(last.type.name) : false;
     };
@@ -36,11 +38,15 @@ export const TrailingNode = Extension.create<TrailingNodeOptions>({
           if (!key.getState(newState)) return null;
           const paragraph = newState.schema.nodes.paragraph;
           if (!paragraph) return null;
-          return newState.tr.insert(newState.doc.content.size, paragraph.create());
+          return newState.tr.insert(
+            newState.doc.content.size,
+            paragraph.create(),
+          );
         },
         state: {
           init: (_config, state) => needsTrailingNode(state.doc),
-          apply: (tr, value) => (tr.docChanged ? needsTrailingNode(tr.doc) : value),
+          apply: (tr, value) =>
+            tr.docChanged ? needsTrailingNode(tr.doc) : value,
         },
       }),
     ];

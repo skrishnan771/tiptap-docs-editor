@@ -24,7 +24,11 @@ import { Youtube } from "@tiptap/extension-youtube";
 import { CharacterCount } from "@tiptap/extension-character-count";
 import { Typography } from "@tiptap/extension-typography";
 import Emoji, { gitHubEmojis } from "@tiptap/extension-emoji";
-import { Details, DetailsContent, DetailsSummary } from "@tiptap/extension-details";
+import {
+  Details,
+  DetailsContent,
+  DetailsSummary,
+} from "@tiptap/extension-details";
 import { FileHandler } from "@tiptap/extension-file-handler";
 
 import { SlashCommands } from "./slash-menu";
@@ -138,13 +142,9 @@ export interface DefaultExtensionOptions {
  * ```
  */
 export function getDefaultExtensions(
-  options: DefaultExtensionOptions
+  options: DefaultExtensionOptions,
 ): AnyExtension[] {
-  const {
-    theme,
-    placeholder = "Start writing…",
-    slashMenuItems,
-  } = options;
+  const { theme, placeholder = "Start writing…", slashMenuItems } = options;
 
   return [
     StarterKit.configure({
@@ -194,7 +194,13 @@ export function getDefaultExtensions(
     }),
     /* Drop or paste an image straight onto the page, as Notion does. */
     FileHandler.configure({
-      allowedMimeTypes: ["image/png", "image/jpeg", "image/gif", "image/webp", "image/svg+xml"],
+      allowedMimeTypes: [
+        "image/png",
+        "image/jpeg",
+        "image/gif",
+        "image/webp",
+        "image/svg+xml",
+      ],
       onDrop: (editor, files, pos) => {
         files.forEach((file) => insertImageFromFile(editor, file, pos));
       },
